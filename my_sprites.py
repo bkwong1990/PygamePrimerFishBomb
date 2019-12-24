@@ -188,7 +188,7 @@ class LaserTank(pygame.sprite.Sprite):
             pygame.event.post(laser_event)
         else:
             if self.frames_until_laser == 60:
-                sfx_event = pygame.event.Event(my_events.MAKESOUND, filename = "media/laser.ogg")
+                sfx_event = pygame.event.Event(my_events.MAKESOUND, sound_index="laser")
                 pygame.event.post(sfx_event)
             if self.frames_until_laser <= 60:
                 #Suspend movement for one second before the laser fires.

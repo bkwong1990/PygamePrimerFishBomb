@@ -104,7 +104,10 @@ pygame.mixer.music.play(loops=-1)
 volume = pygame.mixer.music.get_volume() * 0.4
 pygame.mixer.music.set_volume(volume)
 
-laser_sound = pygame.mixer.Sound("media/explosion.ogg")
+sound_dict = {
+"explosion": pygame.mixer.Sound("media/explosion.ogg"),
+"laser": pygame.mixer.Sound("media/Laser.ogg")
+}
 
 #define functions
 def handle_events(events):
@@ -143,7 +146,7 @@ def handle_events(events):
             enemies.add(new_laser)
             all_sprites.add(new_laser)
         elif event.type == my_events.MAKESOUND:
-            pygame.mixer.Sound(event.filename).play()
+            sound_dict[event.sound_index].play()
     return running
 
 def write_info():
