@@ -1,0 +1,7 @@
+import pygame
+
+ADDMISSILE = pygame.USEREVENT + 1
+ADDCLOUD = pygame.USEREVENT + 2
+ADDTANK = pygame.USEREVENT + 3
+ADDLASER = pygame.USEREVENT + 4
+MAKESOUND = pygame.USEREVENT + 5

@@ -68,25 +68,27 @@ info_surface.fill( WHITE )
 font_size = 28
 info_font = pygame.font.Font(None, font_size)
 
+import my_events
+
 #Create a custom event for adding a new Enemy
-ADDMISSILE = pygame.USEREVENT + 1
-pygame.time.set_timer(ADDMISSILE, 250)
+#ADDMISSILE = pygame.USEREVENT + 1
+pygame.time.set_timer(my_events.ADDMISSILE, 250)
 
 #Custom event and timer for clouds
-ADDCLOUD = pygame.USEREVENT + 2
-pygame.time.set_timer(ADDCLOUD, 1000)
+#ADDCLOUD = pygame.USEREVENT + 2
+pygame.time.set_timer(my_events.ADDCLOUD, 1000)
 
 #Custom event for Tanks Laser
-ADDTANK = pygame.USEREVENT + 3
-ADDLASER = pygame.USEREVENT + 4
-MAKESOUND = pygame.USEREVENT + 5
+#ADDTANK = pygame.USEREVENT + 3
+#ADDLASER = pygame.USEREVENT + 4
+#MAKESOUND = pygame.USEREVENT + 5
 
 #instantiate Player
 player = my_sprites.Player(BATTLE_X, SCREEN_WIDTH, 0, BATTLE_HEIGHT, player_speed, SKY_COLOR)
 
 #create a group of enemies
 enemies = pygame.sprite.Group()
-pygame.time.set_timer(ADDTANK, 250, True)
+pygame.time.set_timer(my_events.ADDTANK, 250, True)
 
 #create a group of clouds
 clouds = pygame.sprite.Group()
@@ -122,21 +124,21 @@ def handle_events(events):
                 score = score // 2
         elif event.type == QUIT:
             running = False
-        elif event.type == ADDMISSILE:
+        elif event.type == my_events.ADDMISSILE:
             #create a new enemy and add it to sprite groups
             new_missile = my_sprites.Missile(BATTLE_X, SCREEN_WIDTH, 0, BATTLE_HEIGHT, missile_maxspeed, SKY_COLOR)
             enemies.add(new_missile)
             all_sprites.add(new_missile)
-        elif event.type == ADDCLOUD:
+        elif event.type == my_events.ADDCLOUD:
             #create new cloud
             new_cloud = my_sprites.Cloud(BATTLE_X, SCREEN_WIDTH, 0, BATTLE_HEIGHT, cloud_speed, SKY_COLOR)
             clouds.add(new_cloud)
             all_sprites.add(new_cloud)
-        elif event.type == ADDTANK:
-            new_tank = my_sprites.LaserTank(BATTLE_X, SCREEN_WIDTH, BATTLE_HEIGHT, tank_speed, SKY_COLOR, player, ADDLASER, ADDTANK)
+        elif event.type == my_events.ADDTANK:
+            new_tank = my_sprites.LaserTank(BATTLE_X, SCREEN_WIDTH, BATTLE_HEIGHT, tank_speed, SKY_COLOR, player)
             enemies.add(new_tank)
             all_sprites.add(new_tank)
-        elif event.type == ADDLASER:
+        elif event.type == my_events.ADDLASER:
             new_laser = my_sprites.Laser(event.centerx, event.bottom, SKY_COLOR)
             enemies.add(new_laser)
             all_sprites.add(new_laser)

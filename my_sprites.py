@@ -2,6 +2,8 @@
 #12/23/2019: Initial checkin
 
 import pygame
+import my_events
+
 from pygame.locals import (
 RLEACCEL,
 K_UP,
@@ -136,7 +138,7 @@ class LaserTank(pygame.sprite.Sprite):
         laser_event_type (event type): The event type to be used to create a laser
         respawn_event_type (event type): The event type to be used to force another tank to spawn
     '''
-    def __init__(self, left_bound, right_bound, bottom_bound, tank_speed, colorkey, target, laser_event_type, respawn_event_type):
+    def __init__(self, left_bound, right_bound, bottom_bound, tank_speed, colorkey, target):
         super(LaserTank, self).__init__()
         self.surf = pygame.image.load("tank2.png").convert()
         self.surf.set_colorkey(colorkey, RLEACCEL)
@@ -154,9 +156,9 @@ class LaserTank(pygame.sprite.Sprite):
 
         self.target = target
         self.speed = tank_speed
-        self.event_on_death = respawn_event_type
+        self.event_on_death = my_events.ADDTANK
         self.frames_until_laser = LaserTank.LASER_COOLDOWN
-        self.laser_event_type = laser_event_type
+        self.laser_event_type = my_events.ADDLASER
         self.frames_until_movement = 0;
 
     '''
