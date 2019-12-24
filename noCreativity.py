@@ -49,6 +49,7 @@ tank_speed = 1
 #initialize score
 score = 0
 
+pygame.mixer.init()
 pygame.init()
 
 #Create screen object
@@ -78,6 +79,7 @@ pygame.time.set_timer(ADDCLOUD, 1000)
 #Custom event for Tanks Laser
 ADDTANK = pygame.USEREVENT + 3
 ADDLASER = pygame.USEREVENT + 4
+MAKESOUND = pygame.USEREVENT + 5
 
 #instantiate Player
 player = my_sprites.Player(BATTLE_X, SCREEN_WIDTH, 0, BATTLE_HEIGHT, player_speed, SKY_COLOR)
@@ -94,6 +96,13 @@ all_sprites.add(player)
 
 # Setup clock to change framerate
 clock = pygame.time.Clock()
+
+pygame.mixer.music.load("media/01_go_without_seeing_back_.ogg")
+pygame.mixer.music.play(loops=-1)
+volume = pygame.mixer.music.get_volume() * 0.4
+pygame.mixer.music.set_volume(volume)
+
+laser_sound = pygame.mixer.Sound("media/explosion.ogg")
 
 #define functions
 def handle_events(events):
@@ -193,3 +202,5 @@ while running:
     #Force fps
     clock.tick(60)
 print("Final score: %010d" % score)
+pygame.mixer.music.stop()
+pygame.mixer.quit()
