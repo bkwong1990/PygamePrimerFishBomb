@@ -72,7 +72,7 @@ import my_events
 
 #Create a custom event for adding a new Enemy
 #ADDMISSILE = pygame.USEREVENT + 1
-pygame.time.set_timer(my_events.ADDMISSILE, 250)
+pygame.time.set_timer(my_events.ADDMISSILE, 500)
 
 #Custom event and timer for clouds
 #ADDCLOUD = pygame.USEREVENT + 2
@@ -142,6 +142,8 @@ def handle_events(events):
             new_laser = my_sprites.Laser(event.centerx, event.bottom, SKY_COLOR)
             enemies.add(new_laser)
             all_sprites.add(new_laser)
+        elif event.type == my_events.MAKESOUND:
+            pygame.mixer.Sound(event.filename).play()
     return running
 
 def write_info():

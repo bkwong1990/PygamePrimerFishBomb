@@ -156,9 +156,8 @@ class LaserTank(pygame.sprite.Sprite):
 
         self.target = target
         self.speed = tank_speed
-        self.event_on_death = my_events.ADDTANK
         self.frames_until_laser = LaserTank.LASER_COOLDOWN
-        self.laser_event_type = my_events.ADDLASER
+        #self.laser_event_type = my_events.ADDLASER
         self.frames_until_movement = 0;
 
     '''
@@ -185,9 +184,12 @@ class LaserTank(pygame.sprite.Sprite):
             self.frames_until_movement = Laser.LASER_DURATION
             self.rect.bottom = self.bottom_bound
             #creates a laser event object that also contains the coordinates to start the laser at
-            laser_event = pygame.event.Event(self.laser_event_type, centerx = self.rect.centerx, bottom = self.rect.top)
+            laser_event = pygame.event.Event(my_events.ADDLASER, centerx = self.rect.centerx, bottom = self.rect.top)
             pygame.event.post(laser_event)
         else:
+            if self.frames_until_laser == 60:
+                sfx_event = pygame.event.Event(my_events.MAKESOUND, filename = "media/laser.ogg")
+                pygame.event.post(sfx_event)
             if self.frames_until_laser <= 60:
                 #Suspend movement for one second before the laser fires.
                 self.frames_until_movement = Laser.LASER_DURATION
@@ -196,7 +198,7 @@ class LaserTank(pygame.sprite.Sprite):
     Kills the tank, but not before setting a one-time timer to force another tank to spawn
     '''
     def kill(self):
-        pygame.time.set_timer(respawn_event_type, LaserTank.SPAWN_TIME, True)
+        pygame.time.set_timer(my_events.ADDTANK, LaserTank.SPAWN_TIME, True)
         pygame.sprite.Sprite.kill(self)
 
 #A laser that pierces the heavens
