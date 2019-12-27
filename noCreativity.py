@@ -92,18 +92,24 @@ pygame.time.set_timer(my_events.ADDTANK, 250, True)
 
 #create a group of clouds
 clouds = pygame.sprite.Group()
-#create a group of all game pieces (enemies + player)
+
+#create a group of miscellaneous sprites
+misc_sprites = pygame.sprite.Group()
+
+#create a group of all game pieces (enemies + player + clouds)
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
 # Setup clock to change framerate
 clock = pygame.time.Clock()
 
+#load and set volume of main BGM
 pygame.mixer.music.load("media/01_go_without_seeing_back_.ogg")
 pygame.mixer.music.play(loops=-1)
 volume = pygame.mixer.music.get_volume() * 0.4
 pygame.mixer.music.set_volume(volume)
 
+#dictionary to hold sound objects
 sound_dict = {
 "explosion": pygame.mixer.Sound("media/explosion.ogg"),
 "laser": pygame.mixer.Sound("media/Laser.ogg")
@@ -147,6 +153,11 @@ def handle_events(events):
             all_sprites.add(new_laser)
         elif event.type == my_events.MAKESOUND:
             sound_dict[event.sound_index].play()
+        elif event.type == my_events.ADDEXPLOSION:
+            new_explosion = my_sprites.Explosion(event.center, SKY_COLOR)
+            all_sprites.add(new_explosion)
+            misc_sprites.add(new_explosion)
+
     return running
 
 def write_info():
@@ -179,9 +190,10 @@ while running:
     pressed_keys = pygame.key.get_pressed()
     player.update(pressed_keys)
 
-    #update enemy position
+    #update enemy, cloud, and misc sprite positions
     enemies.update()
     clouds.update()
+    misc_sprites.update()
 
     #fill screen with white
     screen.fill( WHITE )
@@ -196,14 +208,19 @@ while running:
     #draw info Surface
     write_info()
 
-    #Check if any enemies have collided with the Player
 
-    if pygame.sprite.spritecollideany(player, enemies):
-        #if a collision occured, remove the player and stop the loop
-        player.kill()
-        running = False
 
-    score += missile_maxspeed
+    if player.alive():
+        #if a collision occured, remove the player and stop the loop in a few seconds
+        if pygame.sprite.spritecollideany(player, enemies):
+            #draw explosion
+            player.kill()
+            sound_dict["explosion"].play()
+
+            #Prepare to quit
+            pygame.time.set_timer(QUIT, 3000, True)
+
+        score += missile_maxspeed
     pygame.display.flip()
 
     #Force fps

@@ -27,8 +27,8 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, player_speed, colorkey):
         super(Player, self).__init__()
         #Set image
-        self.surf = pygame.image.load("jet5.png").convert()
-        self.surf.set_colorkey( colorkey, RLEACCEL )
+        self.surf = pygame.image.load("img/jet6.png").convert_alpha()
+        #self.surf.set_colorkey( colorkey, RLEACCEL )
         self.rect = self.surf.get_rect()
         self.left_bound = left_bound
         self.right_bound = right_bound
@@ -57,6 +57,10 @@ class Player(pygame.sprite.Sprite):
         self.rect.right = self.right_bound if (self.rect.right > self.right_bound) else self.rect.right
         self.rect.top = self.top_bound if (self.rect.top < self.top_bound) else self.rect.top
         self.rect.bottom = self.bottom_bound if (self.rect.bottom > self.bottom_bound) else self.rect.bottom
+    def kill(self):
+        explosion_event = pygame.event.Event(my_events.ADDEXPLOSION, center = self.rect.center)
+        pygame.event.post(explosion_event)
+        pygame.sprite.Sprite.kill(self)
 
 #A missile to shoot down the player
 class Missile(pygame.sprite.Sprite):
@@ -70,8 +74,8 @@ class Missile(pygame.sprite.Sprite):
     '''
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, missile_maxspeed, colorkey):
         super(Missile, self).__init__()
-        self.surf = pygame.image.load("missile5.png").convert()
-        self.surf.set_colorkey( colorkey, RLEACCEL)
+        self.surf = pygame.image.load("img/missile6.png").convert_alpha()
+        #self.surf.set_colorkey( colorkey, RLEACCEL)
         self.rect = self.surf.get_rect(
             center=(
                 #Missile can generate out of view on right side of screen
@@ -102,8 +106,8 @@ class Cloud(pygame.sprite.Sprite):
     '''
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, cloud_speed, colorkey):
         super(Cloud, self).__init__()
-        self.surf = pygame.image.load("cloud3.png").convert()
-        self.surf.set_colorkey( colorkey, RLEACCEL)
+        self.surf = pygame.image.load("img/cloud4.png").convert_alpha()
+        #self.surf.set_colorkey( colorkey, RLEACCEL)
         self.rect = self.surf.get_rect(
             center = (
                 random.randint(right_bound + 20, right_bound + 100),
@@ -140,8 +144,8 @@ class LaserTank(pygame.sprite.Sprite):
     '''
     def __init__(self, left_bound, right_bound, bottom_bound, tank_speed, colorkey, target):
         super(LaserTank, self).__init__()
-        self.surf = pygame.image.load("tank2.png").convert()
-        self.surf.set_colorkey(colorkey, RLEACCEL)
+        self.surf = pygame.image.load("img/tank3.png").convert_alpha()
+        #self.surf.set_colorkey(colorkey, RLEACCEL)
 
         width = self.surf.get_rect().width
         height = self.surf.get_rect().height
@@ -166,7 +170,7 @@ class LaserTank(pygame.sprite.Sprite):
         self: The calling object
     '''
     def update(self):
-        if self.frames_until_movement <= 0:
+        if self.frames_until_movement <= 0 & self.target.alive():
             if self.target.rect.centerx < self.rect.centerx:
                 self.rect.move_ip(-self.speed, 0)
             elif self.target.rect.centerx > self.rect.centerx:
@@ -193,7 +197,7 @@ class LaserTank(pygame.sprite.Sprite):
             if self.frames_until_laser <= 60:
                 #Suspend movement for one second before the laser fires.
                 self.frames_until_movement = Laser.LASER_DURATION
-            self.frames_until_laser = self.frames_until_laser - 1
+            self.frames_until_laser -= 1
     '''
     Kills the tank, but not before setting a one-time timer to force another tank to spawn
     '''
@@ -214,8 +218,8 @@ class Laser(pygame.sprite.Sprite):
     '''
     def __init__(self, centerx, bottom, colorkey):
         super(Laser, self).__init__()
-        self.surf = pygame.image.load("laser.png").convert()
-        self.surf.set_colorkey(colorkey, RLEACCEL)
+        self.surf = pygame.image.load("img/laser.png").convert_alpha()
+        #self.surf.set_colorkey(colorkey, RLEACCEL)
 
         self.rect = self.surf.get_rect()
         self.rect.centerx = centerx
@@ -231,4 +235,41 @@ class Laser(pygame.sprite.Sprite):
     def update(self):
         if self.frame_duration == 0:
             self.kill()
-        self.frame_duration = self.frame_duration - 1
+        self.frame_duration -= 1
+
+class Explosion(pygame.sprite.Sprite):
+
+    COLUMNS = 8
+    ROWS = 4
+
+    def __init__(self, center, colorkey):
+        super(Explosion, self).__init__()
+        self.animation_surf = pygame.image.load("img/explosion.png").convert_alpha()
+        #self.animation_surf.set_colorkey(colorkey, RLEACCEL)
+
+
+        animation_rect = self.animation_surf.get_rect()
+        self.surf_width = animation_rect.width // Explosion.COLUMNS
+        self.surf_height = animation_rect.height // Explosion.ROWS
+
+        self.rect = pygame.Rect( (0,0), (self.surf_width, self.surf_height) )
+        self.rect.center = center
+
+        self.current_frame = 0
+        self.surf = self.get_surf()
+
+    def update(self):
+        if(self.current_frame >= 32):
+            self.kill()
+        else:
+            self.surf = self.get_surf()
+            self.current_frame += 1
+
+    def get_surf(self):
+        current_column = min(self.current_frame % Explosion.COLUMNS, Explosion.COLUMNS - 1)
+        current_row = min(self.current_frame // Explosion.COLUMNS, Explosion.ROWS - 1)
+
+        current_x = current_column * self.surf_width
+        current_y = current_row * self.surf_width
+
+        return self.animation_surf.subsurface((current_x, current_y, self.surf_width, self.surf_height))
