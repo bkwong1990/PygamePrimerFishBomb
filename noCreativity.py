@@ -84,7 +84,7 @@ pygame.time.set_timer(my_events.ADDCLOUD, 1000)
 #MAKESOUND = pygame.USEREVENT + 5
 
 #instantiate Player
-player = my_sprites.Player(BATTLE_X, SCREEN_WIDTH, 0, BATTLE_HEIGHT, player_speed, SKY_COLOR)
+player = my_sprites.Player(BATTLE_X, SCREEN_WIDTH, 0, BATTLE_HEIGHT, player_speed)
 
 #create a group of enemies
 enemies = pygame.sprite.Group()
@@ -135,28 +135,29 @@ def handle_events(events):
             running = False
         elif event.type == my_events.ADDMISSILE:
             #create a new enemy and add it to sprite groups
-            new_missile = my_sprites.Missile(BATTLE_X, SCREEN_WIDTH, 0, BATTLE_HEIGHT, missile_maxspeed, SKY_COLOR)
+            new_missile = my_sprites.Missile(BATTLE_X, SCREEN_WIDTH, 0, BATTLE_HEIGHT, missile_maxspeed)
             enemies.add(new_missile)
             all_sprites.add(new_missile)
         elif event.type == my_events.ADDCLOUD:
             #create new cloud
-            new_cloud = my_sprites.Cloud(BATTLE_X, SCREEN_WIDTH, 0, BATTLE_HEIGHT, cloud_speed, SKY_COLOR)
+            new_cloud = my_sprites.Cloud(BATTLE_X, SCREEN_WIDTH, 0, BATTLE_HEIGHT, cloud_speed)
             clouds.add(new_cloud)
             all_sprites.add(new_cloud)
         elif event.type == my_events.ADDTANK:
-            new_tank = my_sprites.LaserTank(BATTLE_X, SCREEN_WIDTH, BATTLE_HEIGHT, tank_speed, SKY_COLOR, player)
+            new_tank = my_sprites.LaserTank(BATTLE_X, SCREEN_WIDTH, BATTLE_HEIGHT, tank_speed,  player)
             enemies.add(new_tank)
             all_sprites.add(new_tank)
         elif event.type == my_events.ADDLASER:
-            new_laser = my_sprites.Laser(event.centerx, event.bottom, SKY_COLOR)
+            new_laser = my_sprites.Laser(event.centerx, event.bottom)
             enemies.add(new_laser)
             all_sprites.add(new_laser)
         elif event.type == my_events.MAKESOUND:
             sound_dict[event.sound_index].play()
         elif event.type == my_events.ADDEXPLOSION:
-            new_explosion = my_sprites.Explosion(event.center, SKY_COLOR)
+            new_explosion = my_sprites.Explosion(event.center)
             all_sprites.add(new_explosion)
             misc_sprites.add(new_explosion)
+            sound_dict["explosion"].play()
 
     return running
 
@@ -215,8 +216,6 @@ while running:
         if pygame.sprite.spritecollideany(player, enemies):
             #draw explosion
             player.kill()
-            sound_dict["explosion"].play()
-
             #Prepare to quit
             pygame.time.set_timer(QUIT, 3000, True)
 

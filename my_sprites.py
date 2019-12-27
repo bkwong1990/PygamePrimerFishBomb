@@ -24,11 +24,11 @@ class Player(pygame.sprite.Sprite):
         player_speed (int): The amount of pixels the player can move per frame. Diagonal movement is faster
         color_key ( (int, int, int) ): The color to be considered transparent for the converted sprite image. RGB numbers.
     '''
-    def __init__(self, left_bound, right_bound, top_bound, bottom_bound, player_speed, colorkey):
+    def __init__(self, left_bound, right_bound, top_bound, bottom_bound, player_speed):
         super(Player, self).__init__()
         #Set image
-        self.surf = pygame.image.load("img/jet6.png").convert_alpha()
-        #self.surf.set_colorkey( colorkey, RLEACCEL )
+        self.surf = pygame.image.load("img/jet.png").convert_alpha()
+
         self.rect = self.surf.get_rect()
         self.left_bound = left_bound
         self.right_bound = right_bound
@@ -72,10 +72,10 @@ class Missile(pygame.sprite.Sprite):
         missile_maxspeed (int): The maximum speed the missile can get from the RNG
         color_key ( (int, int, int) ): The color to be considered transparent for the converted sprite image. RGB numbers.
     '''
-    def __init__(self, left_bound, right_bound, top_bound, bottom_bound, missile_maxspeed, colorkey):
+    def __init__(self, left_bound, right_bound, top_bound, bottom_bound, missile_maxspeed):
         super(Missile, self).__init__()
-        self.surf = pygame.image.load("img/missile6.png").convert_alpha()
-        #self.surf.set_colorkey( colorkey, RLEACCEL)
+        self.surf = pygame.image.load("img/missile.png").convert_alpha()
+
         self.rect = self.surf.get_rect(
             center=(
                 #Missile can generate out of view on right side of screen
@@ -104,10 +104,10 @@ class Cloud(pygame.sprite.Sprite):
         cloud_speed (int): The cloud's speed
         color_key ( (int, int, int) ): The color to be considered transparent for the converted sprite image. RGB numbers.
     '''
-    def __init__(self, left_bound, right_bound, top_bound, bottom_bound, cloud_speed, colorkey):
+    def __init__(self, left_bound, right_bound, top_bound, bottom_bound, cloud_speed):
         super(Cloud, self).__init__()
-        self.surf = pygame.image.load("img/cloud4.png").convert_alpha()
-        #self.surf.set_colorkey( colorkey, RLEACCEL)
+        self.surf = pygame.image.load("img/cloud.png").convert_alpha()
+
         self.rect = self.surf.get_rect(
             center = (
                 random.randint(right_bound + 20, right_bound + 100),
@@ -142,10 +142,9 @@ class LaserTank(pygame.sprite.Sprite):
         laser_event_type (event type): The event type to be used to create a laser
         respawn_event_type (event type): The event type to be used to force another tank to spawn
     '''
-    def __init__(self, left_bound, right_bound, bottom_bound, tank_speed, colorkey, target):
+    def __init__(self, left_bound, right_bound, bottom_bound, tank_speed, target):
         super(LaserTank, self).__init__()
-        self.surf = pygame.image.load("img/tank3.png").convert_alpha()
-        #self.surf.set_colorkey(colorkey, RLEACCEL)
+        self.surf = pygame.image.load("img/tank.png").convert_alpha()
 
         width = self.surf.get_rect().width
         height = self.surf.get_rect().height
@@ -216,10 +215,9 @@ class Laser(pygame.sprite.Sprite):
         bottom: The vertical coordinate of the laser's bottom
         color_key ( (int, int, int) ): The color to be considered transparent for the converted sprite image. RGB numbers.
     '''
-    def __init__(self, centerx, bottom, colorkey):
+    def __init__(self, centerx, bottom):
         super(Laser, self).__init__()
         self.surf = pygame.image.load("img/laser.png").convert_alpha()
-        #self.surf.set_colorkey(colorkey, RLEACCEL)
 
         self.rect = self.surf.get_rect()
         self.rect.centerx = centerx
@@ -237,16 +235,25 @@ class Laser(pygame.sprite.Sprite):
             self.kill()
         self.frame_duration -= 1
 
+#An explosion sprite with animation
 class Explosion(pygame.sprite.Sprite):
 
+    #define expected columns, rows, total frames, and slowness multiplier
     COLUMNS = 8
     ROWS = 4
+    TOTAL_FRAMES = COLUMNS * ROWS
+    #This will cause frames to be repeated and make the animation slower.
+    SLOW_MULTIPLIER = 3
 
-    def __init__(self, center, colorkey):
+    '''
+    Creates a new explosion
+    Parameters:
+        self: The object being created
+        center: the center of the explosion
+    '''
+    def __init__(self, center):
         super(Explosion, self).__init__()
         self.animation_surf = pygame.image.load("img/explosion.png").convert_alpha()
-        #self.animation_surf.set_colorkey(colorkey, RLEACCEL)
-
 
         animation_rect = self.animation_surf.get_rect()
         self.surf_width = animation_rect.width // Explosion.COLUMNS
@@ -256,18 +263,24 @@ class Explosion(pygame.sprite.Sprite):
         self.rect.center = center
 
         self.current_frame = 0
-        self.surf = self.get_surf()
-
+        self.surf = self.next_surf()
+    '''
+    Updates the explosion's current surface. Position is unchanged.
+    Parameters:
+        self: The calling object
+    '''
     def update(self):
-        if(self.current_frame >= 32):
+        if(self.current_frame >= Explosion.TOTAL_FRAMES * Explosion.SLOW_MULTIPLIER):
             self.kill()
         else:
-            self.surf = self.get_surf()
+            self.surf = self.next_surf()
             self.current_frame += 1
-
-    def get_surf(self):
-        current_column = min(self.current_frame % Explosion.COLUMNS, Explosion.COLUMNS - 1)
-        current_row = min(self.current_frame // Explosion.COLUMNS, Explosion.ROWS - 1)
+    '''
+    Returns a new surface for the explosion based on the current frame
+    '''
+    def next_surf(self):
+        current_column = min((self.current_frame // Explosion.SLOW_MULTIPLIER) % Explosion.COLUMNS, Explosion.COLUMNS - 1)
+        current_row = min((self.current_frame // Explosion.SLOW_MULTIPLIER) // Explosion.COLUMNS, Explosion.ROWS - 1)
 
         current_x = current_column * self.surf_width
         current_y = current_row * self.surf_width
