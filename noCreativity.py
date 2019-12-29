@@ -20,6 +20,7 @@ K_z,
 K_x,
 KEYDOWN,
 QUIT,
+K_SPACE
 )
 
 import my_sprites
@@ -37,6 +38,8 @@ BATTLE_X = SCREEN_WIDTH - BATTLE_WIDTH
 HARD_SPEED_MAX = 50
 HARD_SPEED_MIN = 10
 
+SCORE_FRAME_DURATION = 60
+
 SKY_COLOR = (135, 206, 235)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -45,12 +48,18 @@ missile_maxspeed = 20
 player_speed = 7
 cloud_speed = 2
 tank_speed = 1
+bomb_drop_speed = 10
 
 #initialize score
 score = 0
 
+#initialize bomb status
+can_bomb = True
+
 pygame.mixer.init()
 pygame.init()
+#Set title
+pygame.display.set_caption("My CO Hates Me and Sent Me on a Suicide Mission")
 
 #Create screen object
 
@@ -93,8 +102,14 @@ pygame.time.set_timer(my_events.ADDTANK, 250, True)
 #create a group of clouds
 clouds = pygame.sprite.Group()
 
+#create group of player projectiles
+player_projectiles = pygame.sprite.Group()
+
 #create a group of miscellaneous sprites
 misc_sprites = pygame.sprite.Group()
+
+#create a group of temp text sprites. These should be drawn last for max visibility
+temp_text_sprites = pygame.sprite.Group()
 
 #create a group of all game pieces (enemies + player + clouds)
 all_sprites = pygame.sprite.Group()
@@ -112,13 +127,15 @@ pygame.mixer.music.set_volume(volume)
 #dictionary to hold sound objects
 sound_dict = {
 "explosion": pygame.mixer.Sound("media/explosion.ogg"),
-"laser": pygame.mixer.Sound("media/Laser.ogg")
+"laser": pygame.mixer.Sound("media/Laser.ogg"),
+"reloaded": pygame.mixer.Sound("media/reloaded.ogg")
 }
 
 #define functions
 def handle_events(events):
     global missile_maxspeed
     global score
+    global can_bomb
     running = True
     for event in events:
         if event.type == KEYDOWN:
@@ -128,9 +145,17 @@ def handle_events(events):
                 missile_maxspeed += 10
                 missile_maxspeed = min(missile_maxspeed, HARD_SPEED_MAX)
             elif event.key == K_z:
-                missile_maxspeed -= 10
-                missile_maxspeed = max(missile_maxspeed, HARD_SPEED_MIN)
-                score = score // 2
+                if missile_maxspeed > HARD_SPEED_MIN:
+                    missile_maxspeed -= 10
+                    missile_maxspeed = max(missile_maxspeed, HARD_SPEED_MIN)
+                    score //= 2
+            elif event.key == K_SPACE:
+                if can_bomb & player.alive():
+                    new_bomb = my_sprites.PlayerBomb(player.rect.centerx, player.rect.bottom, BATTLE_HEIGHT, bomb_drop_speed)
+                    all_sprites.add(new_bomb)
+                    player_projectiles.add(new_bomb)
+                    can_bomb = False
+                    pygame.time.set_timer(my_events.RELOADBOMB, 4000, True)
         elif event.type == QUIT:
             running = False
         elif event.type == my_events.ADDMISSILE:
@@ -154,10 +179,19 @@ def handle_events(events):
         elif event.type == my_events.MAKESOUND:
             sound_dict[event.sound_index].play()
         elif event.type == my_events.ADDEXPLOSION:
-            new_explosion = my_sprites.Explosion(event.center)
+            new_explosion = my_sprites.Explosion(event.rect)
             all_sprites.add(new_explosion)
             misc_sprites.add(new_explosion)
             sound_dict["explosion"].play()
+        elif event.type == my_events.RELOADBOMB:
+            if player.alive():
+                can_bomb = True
+                sound_dict["reloaded"].play()
+        elif event.type == my_events.SCOREBONUS:
+            score += event.score
+            text_sprite = my_sprites.TempText("+ %d" % event.score, info_font, (0, 100, 0), event.rect.center, SCORE_FRAME_DURATION
+            )
+            temp_text_sprites.add(text_sprite)
 
     return running
 
@@ -189,12 +223,14 @@ while running:
 
     #Get the key press list and update the player's position
     pressed_keys = pygame.key.get_pressed()
-    player.update(pressed_keys)
+    player.update(pressed_keys, can_bomb)
 
     #update enemy, cloud, and misc sprite positions
     enemies.update()
     clouds.update()
     misc_sprites.update()
+    player_projectiles.update()
+    temp_text_sprites.update()
 
     #fill screen with white
     screen.fill( WHITE )
@@ -206,16 +242,27 @@ while running:
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
 
+    #Temporary text is drawn separately and later to ensure z-order
+    for entity in temp_text_sprites:
+        screen.blit(entity.surf, entity.rect)
+
     #draw info Surface
     write_info()
 
+    #Handle collision between player projectiles and enemies
+    pygame.sprite.groupcollide(player_projectiles, enemies, True, True)
 
 
     if player.alive():
+        #If a collision occured, enemy_collider will be non-None, an actual enemy
+        enemy_collider = pygame.sprite.spritecollideany(player, enemies)
         #if a collision occured, remove the player and stop the loop in a few seconds
-        if pygame.sprite.spritecollideany(player, enemies):
+        if enemy_collider:
             #draw explosion
             player.kill()
+            #The enemy dies depending on its kill_on_contact instance var
+            if enemy_collider.kill_on_contact:
+                enemy_collider.kill()
             #Prepare to quit
             pygame.time.set_timer(QUIT, 3000, True)
 

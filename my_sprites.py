@@ -2,7 +2,8 @@
 #12/23/2019: Initial checkin
 
 import pygame
-import my_events
+
+import math
 
 from pygame.locals import (
 RLEACCEL,
@@ -13,6 +14,14 @@ K_RIGHT
 )
 #RNG needed for enemies and clouds
 import random
+#Using from import because I don't need every event.
+from my_events import (
+ADDTANK,
+ADDLASER,
+MAKESOUND,
+post_explosion,
+post_score_bonus
+)
 
 #A class representing the player character
 class Player(pygame.sprite.Sprite):
@@ -26,8 +35,12 @@ class Player(pygame.sprite.Sprite):
     '''
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, player_speed):
         super(Player, self).__init__()
-        #Set image
-        self.surf = pygame.image.load("img/jet.png").convert_alpha()
+        #Set image for the player when the bomb is ready
+        self.surf_bomb_ready = pygame.image.load("img/jet.png").convert_alpha()
+        #set another image for when the bomb isn't ready
+        self.surf_bomb_standby = pygame.image.load("img/jet_nobomb.png").convert_alpha()
+        #player starts with bomb ready
+        self.surf = self.surf_bomb_ready
 
         self.rect = self.surf.get_rect()
         self.left_bound = left_bound
@@ -38,11 +51,16 @@ class Player(pygame.sprite.Sprite):
 
     '''
     Updates the player's position based on the pressed keys. The player cannot pass the boundaries of the containing area.
+    Also updates the player's sprite depending on whether or not the bomb is ready
     Parameters:
         self: The calling object
         pressed_keys: a collection that shows which keys were pressed for the current frame
+        can_bomb: a boolean indicating if the player's bomb is ready and loaded
     '''
-    def update(self, pressed_keys):
+    def update(self, pressed_keys, can_bomb):
+        #Choose surface depending on bomb readiness
+        self.surf = self.surf_bomb_ready if can_bomb else self.surf_bomb_standby
+
         if pressed_keys[K_UP]:
             self.rect.move_ip(0, -self.player_speed)
         if pressed_keys[K_DOWN]:
@@ -57,13 +75,45 @@ class Player(pygame.sprite.Sprite):
         self.rect.right = self.right_bound if (self.rect.right > self.right_bound) else self.rect.right
         self.rect.top = self.top_bound if (self.rect.top < self.top_bound) else self.rect.top
         self.rect.bottom = self.bottom_bound if (self.rect.bottom > self.bottom_bound) else self.rect.bottom
+    '''
+    Posts explosion event and removes this sprite from all sprite groups it belongs to
+    Parameters:
+        self: the calling object
+    '''
     def kill(self):
-        explosion_event = pygame.event.Event(my_events.ADDEXPLOSION, center = self.rect.center)
-        pygame.event.post(explosion_event)
+        post_explosion(self.rect)
+        pygame.sprite.Sprite.kill(self)
+#A superclass for all enemy sprites with shared behavior
+class Enemy(pygame.sprite.Sprite):
+    '''
+    Creates a new enemy with default values for its instance vars
+    Parameters:
+        self: the object being created
+    '''
+    def __init__(self):
+        super(Enemy, self).__init__()
+        self.kill_on_contact = True
+        self.score = 0
+        self.rect = None
+        self.explode_on_death = True
+    '''
+    Posts a score event and an explosion event.
+    Removes enemy sprite from all sprite groups
+    If this behavior is unneeded, use pygame.sprite.Sprite.kill(self)
+    Parameters:
+        self: the calling object
+    '''
+    def kill(self):
+        #If score is greater than zero, post a bonus score event
+        if self.score > 0:
+            post_score_bonus(self.score, self.rect)
+        #If the enemy is supposed to explode on death, post an explosion event
+        if self.explode_on_death:
+            post_explosion(self.rect)
         pygame.sprite.Sprite.kill(self)
 
 #A missile to shoot down the player
-class Missile(pygame.sprite.Sprite):
+class Missile(Enemy):
     '''
     Creates a new missile
     Parameters:
@@ -85,6 +135,7 @@ class Missile(pygame.sprite.Sprite):
         )
         self.left_bound = left_bound
         self.speed = random.randint(5, missile_maxspeed)
+        self.score = 1000
     '''
     Updates the missile's position. The missile will be killed upon going through the left side of the containing space.
     Parameters:
@@ -93,7 +144,9 @@ class Missile(pygame.sprite.Sprite):
     def update(self):
         self.rect.move_ip(-self.speed, 0)
         if self.rect.right < self.left_bound:
-            self.kill()
+            #Use default sprite kill to prevent needless explosion & score increase
+            pygame.sprite.Sprite.kill(self)
+
 #A cloud that does nothing
 class Cloud(pygame.sprite.Sprite):
     '''
@@ -128,7 +181,7 @@ class Cloud(pygame.sprite.Sprite):
             self.kill()
 
 #A tank enemy that follows the player's position and shoots lasers
-class LaserTank(pygame.sprite.Sprite):
+class LaserTank(Enemy):
     LASER_COOLDOWN = 300
     SPAWN_TIME = 10000
     '''
@@ -160,8 +213,10 @@ class LaserTank(pygame.sprite.Sprite):
         self.target = target
         self.speed = tank_speed
         self.frames_until_laser = LaserTank.LASER_COOLDOWN
-        #self.laser_event_type = my_events.ADDLASER
+
         self.frames_until_movement = 0;
+
+        self.score = 10000
 
     '''
     Updates the tank's position. The tank will track the player, but cannot pass the boundaries of the screen.
@@ -187,25 +242,28 @@ class LaserTank(pygame.sprite.Sprite):
             self.frames_until_movement = Laser.LASER_DURATION
             self.rect.bottom = self.bottom_bound
             #creates a laser event object that also contains the coordinates to start the laser at
-            laser_event = pygame.event.Event(my_events.ADDLASER, centerx = self.rect.centerx, bottom = self.rect.top)
+            laser_event = pygame.event.Event(ADDLASER, centerx = self.rect.centerx, bottom = self.rect.top)
             pygame.event.post(laser_event)
         else:
             if self.frames_until_laser == 60:
-                sfx_event = pygame.event.Event(my_events.MAKESOUND, sound_index="laser")
+                sfx_event = pygame.event.Event(MAKESOUND, sound_index="laser")
                 pygame.event.post(sfx_event)
             if self.frames_until_laser <= 60:
                 #Suspend movement for one second before the laser fires.
                 self.frames_until_movement = Laser.LASER_DURATION
             self.frames_until_laser -= 1
     '''
-    Kills the tank, but not before setting a one-time timer to force another tank to spawn
+    Set a one-time timer to force another tank to spawn and removes the tank from
+    all sprite groups it belongs to
+    Parameters:
+        self: The calling object
     '''
     def kill(self):
-        pygame.time.set_timer(my_events.ADDTANK, LaserTank.SPAWN_TIME, True)
-        pygame.sprite.Sprite.kill(self)
+        pygame.time.set_timer(ADDTANK, LaserTank.SPAWN_TIME, True)
+        Enemy.kill(self)
 
 #A laser that pierces the heavens
-class Laser(pygame.sprite.Sprite):
+class Laser(Enemy):
     LASER_DURATION = 10
     '''
     Creates a new laser
@@ -224,15 +282,19 @@ class Laser(pygame.sprite.Sprite):
         self.rect.bottom = bottom
 
         self.frame_duration = Laser.LASER_DURATION
-
+        self.kill_on_contact = False
+        #Making the laser and player bomb collide is difficult, but possible
+        self.score = 20000
+        self.explode_on_death = False
     '''
     Updates the laser's position and counts down the frames until the laser expires
     Parameters:
         self: The calling object
     '''
     def update(self):
-        if self.frame_duration == 0:
-            self.kill()
+        if self.frame_duration <= 0:
+            #If killed by timeout, use Sprite.kill
+            pygame.sprite.Sprite.kill(self)
         self.frame_duration -= 1
 
 #An explosion sprite with animation
@@ -251,18 +313,41 @@ class Explosion(pygame.sprite.Sprite):
         self: The object being created
         center: the center of the explosion
     '''
-    def __init__(self, center):
+    def __init__(self, target_rect):
         super(Explosion, self).__init__()
-        self.animation_surf = pygame.image.load("img/explosion.png").convert_alpha()
+        #Get the surface of the spritesheet
+        original_surf = pygame.image.load("img/explosion.png").convert_alpha()
 
+        #Get the rectable of the spritesheet
+        original_rect = original_surf.get_rect()
+
+        #get the length of the longest side of the target rectangle
+        longest_length = max(target_rect.width, target_rect.height) * 2
+
+        #get the width and height of each cell in the spritesheet
+        original_col_width = original_rect.width // Explosion.COLUMNS
+        original_row_height = original_rect.height // Explosion.ROWS
+
+        #get the width : height ratio of each cell
+        aspect_ratio = original_col_width / original_row_height
+
+        #Rescale the height of the sprite_sheet
+        scaled_height = longest_length * Explosion.ROWS
+        #Rescale the width of the spritesheet
+        scaled_width = math.floor(longest_length * aspect_ratio) * Explosion.COLUMNS
+        #Rescale the spritesheet so that each cell covers the target rectangle
+        self.animation_surf = pygame.transform.scale(original_surf, (scaled_width, scaled_height))
         animation_rect = self.animation_surf.get_rect()
+        #Calculate the width and height of each cell in the new spritesheet surface
         self.surf_width = animation_rect.width // Explosion.COLUMNS
         self.surf_height = animation_rect.height // Explosion.ROWS
 
+        #set the rect of the sprite
         self.rect = pygame.Rect( (0,0), (self.surf_width, self.surf_height) )
-        self.rect.center = center
+        self.rect.center = target_rect.center
 
         self.current_frame = 0
+        #initialize the surface with the first cell of the spritesheet
         self.surf = self.next_surf()
     '''
     Updates the explosion's current surface. Position is unchanged.
@@ -286,3 +371,71 @@ class Explosion(pygame.sprite.Sprite):
         current_y = current_row * self.surf_width
 
         return self.animation_surf.subsurface((current_x, current_y, self.surf_width, self.surf_height))
+
+#A bomb dropped by the player.
+class PlayerBomb(pygame.sprite.Sprite):
+    #the number of pixels the bomb should horizontally drift per frame
+    DRIFT = 4
+    '''
+    Creates a new player bomb
+    Parameters:
+        self: The object being created
+        centerx: the horizontal center of the bomb
+        top: the vertical coordinate of the top of the bomb
+        bottom_bound: the bottom of the space in which the bomb is allowed to exist
+        fall_speed: the vertical speed at which the bomb falls
+    '''
+    def __init__(self, centerx, top, bottom_bound, fall_speed):
+        super(PlayerBomb, self).__init__()
+        self.surf = pygame.image.load("img/fish_bomb.png").convert_alpha()
+        self.rect = self.surf.get_rect()
+        self.rect.centerx = centerx
+        self.rect.top = top
+        self.speed = fall_speed
+
+        self.bottom_bound = bottom_bound
+    '''
+    Updates the bomb's position. Kills bomb if it goes past the bottom of screen
+    Parameters:
+        self: The calling object
+    '''
+    def update(self):
+        self.rect.move_ip(DRIFT, self.speed)
+        if self.rect.top > self.bottom_bound:
+            self.kill()
+    '''
+    Posts an explosion event and removes the bomb from all sprite groups it belongs to
+    Parameters:
+        self: The calling object
+    '''
+    def kill(self):
+        post_explosion(self.rect)
+        pygame.sprite.Sprite.kill(self)
+#A text sprite that disappears after a certain amount of frames
+class TempText(pygame.sprite.Sprite):
+    '''
+    Creates a temporary text
+    Parameters:
+        self: The object being created
+        text: the text to be displayed
+        font: the font with which to write the text
+        color: the color of the text
+        center: the center of the text's rectangle
+        frame_duration: the amount of frames the text should stay onscreen
+    '''
+    def __init__(self, text, font, color, center, frame_duration):
+        super(TempText, self).__init__()
+        self.surf = font.render(text, True, color)
+        self.rect = self.surf.get_rect(
+        center = center
+        )
+        self.frame_duration = frame_duration
+    '''
+    Counts down the frames until the text expires
+    Parameters:
+        self: the calling object
+    '''
+    def update(self):
+        if(self.frame_duration <= 0):
+            self.kill()
+        self.frame_duration -= 1
