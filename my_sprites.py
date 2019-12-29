@@ -400,7 +400,7 @@ class PlayerBomb(pygame.sprite.Sprite):
         self: The calling object
     '''
     def update(self):
-        self.rect.move_ip(DRIFT, self.speed)
+        self.rect.move_ip(PlayerBomb.DRIFT, self.speed)
         if self.rect.top > self.bottom_bound:
             self.kill()
     '''
