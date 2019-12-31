@@ -59,7 +59,7 @@ can_bomb = True
 pygame.mixer.init()
 pygame.init()
 #Set title
-pygame.display.set_caption("My CO Hates Me and Sent Me on a Suicide Mission")
+pygame.display.set_caption("Fish Bomber Vs Laser Tanks")
 
 #Create screen object
 
@@ -126,8 +126,11 @@ pygame.mixer.music.set_volume(volume)
 
 #dictionary to hold sound objects
 sound_dict = {
+# http://soundbible.com/1986-Bomb-Exploding.html
 "explosion": pygame.mixer.Sound("media/explosion.ogg"),
+# http://soundbible.com/1771-Laser-Cannon.html
 "laser": pygame.mixer.Sound("media/Laser.ogg"),
+# voiced by Bradley Wong
 "reloaded": pygame.mixer.Sound("media/reloaded.ogg")
 }
 
@@ -189,7 +192,7 @@ def handle_events(events):
                 sound_dict["reloaded"].play()
         elif event.type == my_events.SCOREBONUS:
             score += event.score
-            text_sprite = my_sprites.TempText("+ %d" % event.score, info_font, (0, 100, 0), event.rect.center, SCORE_FRAME_DURATION
+            text_sprite = my_sprites.TempText("+ %d" % event.score, info_font, (0, 100, 0), event.center, SCORE_FRAME_DURATION
             )
             temp_text_sprites.add(text_sprite)
 

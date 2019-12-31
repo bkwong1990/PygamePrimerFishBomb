@@ -13,6 +13,6 @@ def post_explosion(rect):
     explosion_event = pygame.event.Event(ADDEXPLOSION, rect = rect)
     pygame.event.post(explosion_event)
 
-def post_score_bonus(score, rect):
-    score_bonus_event = pygame.event.Event(SCOREBONUS, score = score, rect = rect)
+def post_score_bonus(score, center):
+    score_bonus_event = pygame.event.Event(SCOREBONUS, score = score, center = center)
     pygame.event.post(score_bonus_event)

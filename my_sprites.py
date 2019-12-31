@@ -36,8 +36,11 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, player_speed):
         super(Player, self).__init__()
         #Set image for the player when the bomb is ready
+        # https://thenounproject.com/term/fighter-jet/59845/
+        # by Juan Garces, ES
         self.surf_bomb_ready = pygame.image.load("img/jet.png").convert_alpha()
         #set another image for when the bomb isn't ready
+        # https://publicdomainvectors.org/en/free-clipart/Stop-process-icon/67213.html
         self.surf_bomb_standby = pygame.image.load("img/jet_nobomb.png").convert_alpha()
         #player starts with bomb ready
         self.surf = self.surf_bomb_ready
@@ -106,7 +109,7 @@ class Enemy(pygame.sprite.Sprite):
     def kill(self):
         #If score is greater than zero, post a bonus score event
         if self.score > 0:
-            post_score_bonus(self.score, self.rect)
+            post_score_bonus(self.score, self.rect.center)
         #If the enemy is supposed to explode on death, post an explosion event
         if self.explode_on_death:
             post_explosion(self.rect)
@@ -124,6 +127,7 @@ class Missile(Enemy):
     '''
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, missile_maxspeed):
         super(Missile, self).__init__()
+        # https://premiumbpthemes.com/explore/missile-transparent-background.html
         self.surf = pygame.image.load("img/missile.png").convert_alpha()
 
         self.rect = self.surf.get_rect(
@@ -159,6 +163,7 @@ class Cloud(pygame.sprite.Sprite):
     '''
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, cloud_speed):
         super(Cloud, self).__init__()
+        # https://www.cleanpng.com/png-cloud-computing-dust-676210/preview.html
         self.surf = pygame.image.load("img/cloud.png").convert_alpha()
 
         self.rect = self.surf.get_rect(
@@ -197,6 +202,7 @@ class LaserTank(Enemy):
     '''
     def __init__(self, left_bound, right_bound, bottom_bound, tank_speed, target):
         super(LaserTank, self).__init__()
+        # https://huntpng.com/keyword/tank-sprite-png
         self.surf = pygame.image.load("img/tank.png").convert_alpha()
 
         width = self.surf.get_rect().width
@@ -316,6 +322,7 @@ class Explosion(pygame.sprite.Sprite):
     def __init__(self, target_rect):
         super(Explosion, self).__init__()
         #Get the surface of the spritesheet
+        # https://www.pnglot.com/i/hJJxmbR_example-sprite-sheet-animation-sprite-sheet-particle-unity/
         original_surf = pygame.image.load("img/explosion.png").convert_alpha()
 
         #Get the rectable of the spritesheet
@@ -387,6 +394,7 @@ class PlayerBomb(pygame.sprite.Sprite):
     '''
     def __init__(self, centerx, top, bottom_bound, fall_speed):
         super(PlayerBomb, self).__init__()
+        # https://opengameart.org/content/2d-retro-fish
         self.surf = pygame.image.load("img/fish_bomb.png").convert_alpha()
         self.rect = self.surf.get_rect()
         self.rect.centerx = centerx
