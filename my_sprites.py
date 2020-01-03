@@ -19,6 +19,7 @@ from my_events import (
 ADDTANK,
 ADDLASER,
 MAKESOUND,
+TANKDEATH,
 post_explosion,
 post_score_bonus
 )
@@ -35,17 +36,12 @@ class Player(pygame.sprite.Sprite):
     '''
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, player_speed):
         super(Player, self).__init__()
-        #Set image for the player when the bomb is ready
-        # https://thenounproject.com/term/fighter-jet/59845/
-        # by Juan Garces, ES
-        self.surf_bomb_ready = pygame.image.load("img/jet.png").convert_alpha()
-        #set another image for when the bomb isn't ready
-        # https://publicdomainvectors.org/en/free-clipart/Stop-process-icon/67213.html
-        self.surf_bomb_standby = pygame.image.load("img/jet_nobomb.png").convert_alpha()
-        #player starts with bomb ready
-        self.surf = self.surf_bomb_ready
 
-        self.rect = self.surf.get_rect()
+        # https://thenounproject.com/term/fighter-jet/59845/
+
+        self.surf = pygame.image.load("img/jet.png").convert_alpha()
+
+        self.rect = self.surf.get_rect( centery = (bottom_bound - top_bound) // 2)
         self.left_bound = left_bound
         self.right_bound = right_bound
         self.top_bound = top_bound
@@ -60,9 +56,8 @@ class Player(pygame.sprite.Sprite):
         pressed_keys: a collection that shows which keys were pressed for the current frame
         can_bomb: a boolean indicating if the player's bomb is ready and loaded
     '''
-    def update(self, pressed_keys, can_bomb):
-        #Choose surface depending on bomb readiness
-        self.surf = self.surf_bomb_ready if can_bomb else self.surf_bomb_standby
+    def update(self, pressed_keys):
+
 
         if pressed_keys[K_UP]:
             self.rect.move_ip(0, -self.player_speed)
@@ -188,7 +183,6 @@ class Cloud(pygame.sprite.Sprite):
 #A tank enemy that follows the player's position and shoots lasers
 class LaserTank(Enemy):
     LASER_COOLDOWN = 300
-    SPAWN_TIME = 10000
     '''
     Creates a new tank
     Parameters:
@@ -265,7 +259,7 @@ class LaserTank(Enemy):
         self: The calling object
     '''
     def kill(self):
-        pygame.time.set_timer(ADDTANK, LaserTank.SPAWN_TIME, True)
+        pygame.event.post( pygame.event.Event(TANKDEATH) )
         Enemy.kill(self)
 
 #A laser that pierces the heavens
@@ -447,3 +441,45 @@ class TempText(pygame.sprite.Sprite):
         if(self.frame_duration <= 0):
             self.kill()
         self.frame_duration -= 1
+# A spacebar prompt that follows a target sprite
+class MovingSpaceBarPrompt(pygame.sprite.Sprite):
+
+    '''
+    Creates a new spacebar prompt
+    Parameters:
+        self: the object being created
+        target: the sprite the spacebar is following
+        offset: the x, y distance the spacebar should be from the target
+    '''
+    def __init__(self, target, offset):
+        super(MovingSpaceBarPrompt, self).__init__()
+
+        # I made this with pixelartmaker.com
+        self.surf = pygame.image.load("img/spacebar.png").convert_alpha()
+        # Use the default image to denote that the spacebar is ready to be used
+        self.ready_surf = self.surf
+        # I pasted the following image on top of the spacebar to show that it's not to be used
+        # https://publicdomainvectors.org/en/free-clipart/Stop-process-icon/67213.html
+        self.not_ready_surf = pygame.image.load("img/spacebar_no.png").convert_alpha()
+        self.rect = self.surf.get_rect( center = target.rect.center )
+
+        self.rect.move_ip(offset)
+        self.offset = offset
+
+        self.target = target
+    '''
+    Updates the position and image of the spacebar 
+    Parameters:
+        self: the spacebar to be updated
+        is_ready: a boolean indicating if the spacebar is ready to be used
+    '''
+    def update(self, is_ready):
+        if self.target.alive():
+
+            self.surf = self.ready_surf if is_ready else self.not_ready_surf
+
+            self.rect.center = self.target.rect.center
+            self.rect.move_ip(self.offset)
+
+        else:
+            self.kill()
