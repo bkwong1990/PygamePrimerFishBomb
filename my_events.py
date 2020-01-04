@@ -9,7 +9,7 @@ ADDEXPLOSION = pygame.USEREVENT + 6
 RELOADBOMB   = pygame.USEREVENT + 7
 SCOREBONUS   = pygame.USEREVENT + 8
 TANKDEATH    = pygame.USEREVENT + 9
-GAMEOVER     = pygame.USEREVENT + 10
+NEXTSESSION  = pygame.USEREVENT + 10
 
 def post_explosion(rect):
     explosion_event = pygame.event.Event(ADDEXPLOSION, rect = rect)

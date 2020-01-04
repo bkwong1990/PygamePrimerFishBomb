@@ -39,9 +39,9 @@ class Player(pygame.sprite.Sprite):
 
         # https://thenounproject.com/term/fighter-jet/59845/
 
-        self.surf = pygame.image.load("img/jet.png").convert_alpha()
+        self.image = pygame.image.load("img/jet.png").convert_alpha()
 
-        self.rect = self.surf.get_rect( centery = (bottom_bound - top_bound) // 2)
+        self.rect = self.image.get_rect( centery = (bottom_bound - top_bound) // 2)
         self.left_bound = left_bound
         self.right_bound = right_bound
         self.top_bound = top_bound
@@ -123,9 +123,9 @@ class Missile(Enemy):
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, missile_maxspeed):
         super(Missile, self).__init__()
         # https://premiumbpthemes.com/explore/missile-transparent-background.html
-        self.surf = pygame.image.load("img/missile.png").convert_alpha()
+        self.image = pygame.image.load("img/missile.png").convert_alpha()
 
-        self.rect = self.surf.get_rect(
+        self.rect = self.image.get_rect(
             center=(
                 #Missile can generate out of view on right side of screen
                 random.randint(right_bound + 20, right_bound + 100),
@@ -159,9 +159,9 @@ class Cloud(pygame.sprite.Sprite):
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, cloud_speed):
         super(Cloud, self).__init__()
         # https://www.cleanpng.com/png-cloud-computing-dust-676210/preview.html
-        self.surf = pygame.image.load("img/cloud.png").convert_alpha()
+        self.image = pygame.image.load("img/cloud.png").convert_alpha()
 
-        self.rect = self.surf.get_rect(
+        self.rect = self.image.get_rect(
             center = (
                 random.randint(right_bound + 20, right_bound + 100),
                 random.randint(top_bound, bottom_bound)
@@ -197,11 +197,11 @@ class LaserTank(Enemy):
     def __init__(self, left_bound, right_bound, bottom_bound, tank_speed, target):
         super(LaserTank, self).__init__()
         # https://huntpng.com/keyword/tank-sprite-png
-        self.surf = pygame.image.load("img/tank.png").convert_alpha()
+        self.image = pygame.image.load("img/tank.png").convert_alpha()
 
-        width = self.surf.get_rect().width
-        height = self.surf.get_rect().height
-        self.rect = self.surf.get_rect()
+        width = self.image.get_rect().width
+        height = self.image.get_rect().height
+        self.rect = self.image.get_rect()
 
         self.rect.centerx = random.randint(left_bound + width // 2, right_bound - width // 2)
         self.rect.bottom = bottom_bound
@@ -275,9 +275,9 @@ class Laser(Enemy):
     '''
     def __init__(self, centerx, bottom):
         super(Laser, self).__init__()
-        self.surf = pygame.image.load("img/laser.png").convert_alpha()
+        self.image = pygame.image.load("img/laser.png").convert_alpha()
 
-        self.rect = self.surf.get_rect()
+        self.rect = self.image.get_rect()
         self.rect.centerx = centerx
         self.rect.bottom = bottom
 
@@ -340,16 +340,16 @@ class Explosion(pygame.sprite.Sprite):
         self.animation_surf = pygame.transform.scale(original_surf, (scaled_width, scaled_height))
         animation_rect = self.animation_surf.get_rect()
         #Calculate the width and height of each cell in the new spritesheet surface
-        self.surf_width = animation_rect.width // Explosion.COLUMNS
-        self.surf_height = animation_rect.height // Explosion.ROWS
+        self.image_width = animation_rect.width // Explosion.COLUMNS
+        self.image_height = animation_rect.height // Explosion.ROWS
 
         #set the rect of the sprite
-        self.rect = pygame.Rect( (0,0), (self.surf_width, self.surf_height) )
+        self.rect = pygame.Rect( (0,0), (self.image_width, self.image_height) )
         self.rect.center = target_rect.center
 
         self.current_frame = 0
         #initialize the surface with the first cell of the spritesheet
-        self.surf = self.next_surf()
+        self.image = self.next_surf()
     '''
     Updates the explosion's current surface. Position is unchanged.
     Parameters:
@@ -359,7 +359,7 @@ class Explosion(pygame.sprite.Sprite):
         if(self.current_frame >= Explosion.TOTAL_FRAMES * Explosion.SLOW_MULTIPLIER):
             self.kill()
         else:
-            self.surf = self.next_surf()
+            self.image = self.next_surf()
             self.current_frame += 1
     '''
     Returns a new surface for the explosion based on the current frame
@@ -368,10 +368,10 @@ class Explosion(pygame.sprite.Sprite):
         current_column = min((self.current_frame // Explosion.SLOW_MULTIPLIER) % Explosion.COLUMNS, Explosion.COLUMNS - 1)
         current_row = min((self.current_frame // Explosion.SLOW_MULTIPLIER) // Explosion.COLUMNS, Explosion.ROWS - 1)
 
-        current_x = current_column * self.surf_width
-        current_y = current_row * self.surf_width
+        current_x = current_column * self.image_width
+        current_y = current_row * self.image_width
 
-        return self.animation_surf.subsurface((current_x, current_y, self.surf_width, self.surf_height))
+        return self.animation_surf.subsurface((current_x, current_y, self.image_width, self.image_height))
 
 #A bomb dropped by the player.
 class PlayerBomb(pygame.sprite.Sprite):
@@ -389,8 +389,8 @@ class PlayerBomb(pygame.sprite.Sprite):
     def __init__(self, centerx, top, bottom_bound, fall_speed):
         super(PlayerBomb, self).__init__()
         # https://opengameart.org/content/2d-retro-fish
-        self.surf = pygame.image.load("img/fish_bomb.png").convert_alpha()
-        self.rect = self.surf.get_rect()
+        self.image = pygame.image.load("img/fish_bomb.png").convert_alpha()
+        self.rect = self.image.get_rect()
         self.rect.centerx = centerx
         self.rect.top = top
         self.speed = fall_speed
@@ -414,9 +414,9 @@ class PlayerBomb(pygame.sprite.Sprite):
         post_explosion(self.rect)
         pygame.sprite.Sprite.kill(self)
 #A text sprite that disappears after a certain amount of frames
-class TempText(pygame.sprite.Sprite):
+class TextSprite(pygame.sprite.Sprite):
     '''
-    Creates a temporary text
+    Creates a text sprite
     Parameters:
         self: The object being created
         text: the text to be displayed
@@ -425,20 +425,21 @@ class TempText(pygame.sprite.Sprite):
         center: the center of the text's rectangle
         frame_duration: the amount of frames the text should stay onscreen
     '''
-    def __init__(self, text, font, color, center, frame_duration):
-        super(TempText, self).__init__()
-        self.surf = font.render(text, True, color)
-        self.rect = self.surf.get_rect(
+    def __init__(self, text, font, color, center, frame_duration = 60, is_permanent = True):
+        super(TextSprite, self).__init__()
+        self.image = font.render(text, True, color)
+        self.rect = self.image.get_rect(
         center = center
         )
         self.frame_duration = frame_duration
+        self.is_permanent = is_permanent
     '''
     Counts down the frames until the text expires
     Parameters:
         self: the calling object
     '''
     def update(self):
-        if(self.frame_duration <= 0):
+        if not(self.is_permanent) and (self.frame_duration <= 0):
             self.kill()
         self.frame_duration -= 1
 # A spacebar prompt that follows a target sprite
@@ -455,20 +456,20 @@ class MovingSpaceBarPrompt(pygame.sprite.Sprite):
         super(MovingSpaceBarPrompt, self).__init__()
 
         # I made this with pixelartmaker.com
-        self.surf = pygame.image.load("img/spacebar.png").convert_alpha()
+        self.image = pygame.image.load("img/spacebar.png").convert_alpha()
         # Use the default image to denote that the spacebar is ready to be used
-        self.ready_surf = self.surf
+        self.ready_surf = self.image
         # I pasted the following image on top of the spacebar to show that it's not to be used
         # https://publicdomainvectors.org/en/free-clipart/Stop-process-icon/67213.html
         self.not_ready_surf = pygame.image.load("img/spacebar_no.png").convert_alpha()
-        self.rect = self.surf.get_rect( center = target.rect.center )
+        self.rect = self.image.get_rect( center = target.rect.center )
 
         self.rect.move_ip(offset)
         self.offset = offset
 
         self.target = target
     '''
-    Updates the position and image of the spacebar 
+    Updates the position and image of the spacebar
     Parameters:
         self: the spacebar to be updated
         is_ready: a boolean indicating if the spacebar is ready to be used
@@ -476,7 +477,7 @@ class MovingSpaceBarPrompt(pygame.sprite.Sprite):
     def update(self, is_ready):
         if self.target.alive():
 
-            self.surf = self.ready_surf if is_ready else self.not_ready_surf
+            self.image = self.ready_surf if is_ready else self.not_ready_surf
 
             self.rect.center = self.target.rect.center
             self.rect.move_ip(self.offset)

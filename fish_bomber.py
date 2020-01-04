@@ -12,21 +12,32 @@ SCREEN_HEIGHT = 720
 
 #Create screen object
 
-SCREEN = pygame.display.set_mode( (SCREEN_WIDTH, SCREEN_HEIGHT) )
+SCREEN = pygame.display.set_mode( (SCREEN_WIDTH, SCREEN_HEIGHT) , flags=pygame.SCALED)
 
 config_dict = {
 "missile_maxspeed": 20
 }
 
+session_dict = {
+"title": title_session.TitleSession,
+"battle": battle_session.BattleSession
+}
+
 #Set title
 pygame.display.set_caption("Fish Bomber Vs Laser Tanks")
 
+#Set volume once
+volume = pygame.mixer.music.get_volume() * 0.4
+pygame.mixer.music.set_volume(volume)
+
+session_key = "title"
 running = True
 while running:
-    session = title_session.TitleSession(SCREEN)
-    session.run_loop()
-
-    session = battle_session.BattleSession(SCREEN, config_dict)
-    session.run_loop()
+    current_session = session_dict[session_key](SCREEN, config_dict)
+    session_key = current_session.run_loop()
+    if not(session_key):
+        running = False
 
 pygame.mixer.quit()
+pygame.quit()
+print("Ended normally")

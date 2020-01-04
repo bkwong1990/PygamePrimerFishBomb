@@ -8,21 +8,20 @@ K_z,
 K_x,
 KEYDOWN,
 QUIT,
-K_SPACE
+K_SPACE,
+K_ESCAPE
 )
 
 import my_sprites
 
 import my_events
+import session
 
 #initialize mixer and pygame
 pygame.mixer.init()
 pygame.init()
 
-BATTLE_WIDTH_RATIO = 100/128
-BATTLE_HEIGHT_RATIO = 1
-
-FONT_SIZE_RATIO = 28/1280
+FONT_SIZE = 28
 
 #Speed limits
 
@@ -55,28 +54,24 @@ SOUND_DICT = {
 }
 
 # a class representing a single session of gameplay
-class BattleSession:
+class BattleSession(session.Session):
     def __init__(self, screen, config_dict):
-        self.screen = screen
-        self.screen_rect = screen.get_rect()
+        super(BattleSession, self).__init__(screen, config_dict)
         self.can_bomb = True
         self.score = 0
         self.current_tank_count = 0
 
         self.missile_maxspeed = config_dict["missile_maxspeed"]
-
+        self.missile_maxpeed = max(min(HARD_SPEED_MAX, self.missile_maxspeed), HARD_SPEED_MIN)
 
         self.init_sprite_groups()
-        font_size = round(self.screen_rect.width * FONT_SIZE_RATIO)
-        self.font = pygame.font.Font(None, font_size )
 
-        #self.battle_surf, self.battle_rect = self.init_battle_area()
+        self.font = pygame.font.Font(None, FONT_SIZE )
+
         self.init_battle_area()
 
         self.player = my_sprites.Player(self.battle_rect.x, self.screen_rect.width, self.battle_rect.y, self.screen_rect.height, PLAYER_SPEED)
-
         self.spacebar_prompt = my_sprites.MovingSpaceBarPrompt(self.player, (0, self.player.rect.height))
-
         self.all_sprites.add(self.player, self.spacebar_prompt)
 
     def init_sprite_groups(self):
@@ -88,8 +83,8 @@ class BattleSession:
 
     def init_battle_area(self):
         # create battle surface based on the screen dimensions
-        battle_width = round(self.screen_rect.width * BATTLE_WIDTH_RATIO)
-        battle_height = round(self.screen_rect.height * BATTLE_HEIGHT_RATIO)
+        battle_width = 1000
+        battle_height = self.screen_rect.height
         battle_x = self.screen_rect.width - battle_width
 
         self.battle_surf = pygame.Surface( (battle_width, battle_height) )
@@ -101,8 +96,7 @@ class BattleSession:
         # "Go Without Seeing Back" by Makoto Saita https://big-up.style/musics/34958?wovn=en
         pygame.mixer.music.load("media/01_go_without_seeing_back_.ogg")
         pygame.mixer.music.play(loops=-1)
-        volume = pygame.mixer.music.get_volume() * 0.4
-        pygame.mixer.music.set_volume(volume)
+
 
     def set_event_timers(self, missile_interval, cloud_interval, tank_interval):
         # timers for missiles, clouds, and the tank
@@ -134,7 +128,7 @@ class BattleSession:
                 if enemy_collider.kill_on_contact:
                     enemy_collider.kill()
                 #Prepare to quit
-                pygame.time.set_timer(my_events.GAMEOVER, 3000, True)
+                pygame.time.set_timer(my_events.NEXTSESSION, 3000, True)
             # Add survival points to score
             self.score += self.missile_maxspeed + (100 * self.current_tank_count)
 
@@ -162,7 +156,11 @@ class BattleSession:
                         self.player_projectiles.add(new_bomb)
                         self.can_bomb = False
                         pygame.time.set_timer(my_events.RELOADBOMB, BOMB_RELOAD_TIME, True)
+                    elif event.key == K_ESCAPE:
+                        pygame.quit()
+                        exit(0)
             elif event.type == QUIT:
+                pygame.quit()
                 exit(0)
             elif event.type == my_events.ADDMISSILE:
                 #create a new enemy and add it to sprite groups
@@ -199,13 +197,12 @@ class BattleSession:
                     SOUND_DICT["reloaded"].play()
             elif event.type == my_events.SCOREBONUS:
                 self.score += event.score
-                text_sprite = my_sprites.TempText("+ %d" % event.score, self.font, DARK_GREEN, event.center, SCORE_FRAME_DURATION
-                )
+                text_sprite = my_sprites.TextSprite("+ %d" % event.score, self.font, DARK_GREEN, event.center, SCORE_FRAME_DURATION, False)
                 self.temp_text_sprites.add(text_sprite)
             elif event.type == my_events.TANKDEATH:
                 self.current_tank_count -= 1
                 self.current_tank_count = max(self.current_tank_count, 0)
-            elif event.type == my_events.GAMEOVER:
+            elif event.type == my_events.NEXTSESSION:
                 running = False
         return running
 
@@ -236,13 +233,10 @@ class BattleSession:
             self.screen.blit(self.battle_surf, self.battle_rect )
 
             #draw all sprites
-            for entity in self.all_sprites:
-                self.screen.blit(entity.surf, entity.rect)
+            self.all_sprites.draw(self.screen)
 
             #Temporary text is drawn separately and later to ensure z-order
-            for entity in self.temp_text_sprites:
-                self.screen.blit(entity.surf, entity.rect)
-
+            self.temp_text_sprites.draw(self.screen)
             #draw info Surface
             self.screen.blit(info_surface, (0, 0) )
             self.write_info(clock)
@@ -258,3 +252,4 @@ class BattleSession:
         self.stop_event_timers()
         pygame.mixer.music.stop()
         print("Final score: %015d" % self.score)
+        return "title"
