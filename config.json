@@ -1,0 +1,5 @@
+{
+  "fullscreen" : false, 
+  "missile_maxspeed" : 10, 
+  "max_tank_count" : 1
+}

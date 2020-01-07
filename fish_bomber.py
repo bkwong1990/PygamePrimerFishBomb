@@ -2,6 +2,8 @@ import pygame
 import math
 import battle_session
 import title_session
+import config_session
+import config_helper
 
 #initialize mixer and pygame, init functions can be called multiple times safely
 pygame.mixer.init()
@@ -14,14 +16,18 @@ SCREEN_HEIGHT = 720
 
 SCREEN = pygame.display.set_mode( (SCREEN_WIDTH, SCREEN_HEIGHT) , flags=pygame.SCALED)
 
-config_dict = {
-"missile_maxspeed": 20
-}
+
 
 session_dict = {
 "title": title_session.TitleSession,
-"battle": battle_session.BattleSession
+"battle": battle_session.BattleSession,
+"config": config_session.ConfigSession
 }
+
+config_info = config_helper.get_config_info()
+
+if config_info["fullscreen"]:
+    pygame.display.set_mode( (SCREEN_WIDTH, SCREEN_HEIGHT) , flags=pygame.SCALED|pygame.FULLSCREEN)
 
 #Set title
 pygame.display.set_caption("Fish Bomber Vs Laser Tanks")
@@ -33,8 +39,9 @@ pygame.mixer.music.set_volume(volume)
 session_key = "title"
 running = True
 while running:
-    current_session = session_dict[session_key](SCREEN, config_dict)
+    current_session = session_dict[session_key](SCREEN, config_info)
     session_key = current_session.run_loop()
+    print(config_info)
     if not(session_key):
         running = False
 

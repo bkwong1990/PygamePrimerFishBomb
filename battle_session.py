@@ -4,8 +4,6 @@ exit
 )
 
 from pygame.locals import (
-K_z,
-K_x,
 KEYDOWN,
 QUIT,
 K_SPACE,
@@ -28,6 +26,10 @@ FONT_SIZE = 28
 HARD_SPEED_MAX = 50
 HARD_SPEED_MIN = 10
 
+# Tank count limits
+HARD_TANK_COUNT_MAX = 4
+HARD_TANK_COUNT_MIN = 1
+
 SCORE_FRAME_DURATION = 60
 
 SKY_COLOR = (135, 206, 235)
@@ -41,7 +43,6 @@ TANK_SPEED = 1
 BOMB_DROP_SPEED = 10
 BOMB_RELOAD_TIME = 4000
 
-MAX_TANK_COUNT = 2
 
 #dictionary to hold sound objects
 SOUND_DICT = {
@@ -55,14 +56,16 @@ SOUND_DICT = {
 
 # a class representing a single session of gameplay
 class BattleSession(session.Session):
-    def __init__(self, screen, config_dict):
-        super(BattleSession, self).__init__(screen, config_dict)
+    def __init__(self, screen, config_info):
+        super(BattleSession, self).__init__(screen, config_info)
         self.can_bomb = True
         self.score = 0
         self.current_tank_count = 0
 
-        self.missile_maxspeed = config_dict["missile_maxspeed"]
+        self.missile_maxspeed = config_info["missile_maxspeed"]
         self.missile_maxpeed = max(min(HARD_SPEED_MAX, self.missile_maxspeed), HARD_SPEED_MIN)
+
+        self.max_tank_count = config_info["max_tank_count"]
 
         self.init_sprite_groups()
 
@@ -173,7 +176,7 @@ class BattleSession(session.Session):
                 self.misc_sprites.add(new_cloud)
                 self.all_sprites.add(new_cloud)
             elif event.type == my_events.ADDTANK:
-                if self.current_tank_count < MAX_TANK_COUNT:
+                if self.current_tank_count < self.max_tank_count:
                     new_tank = my_sprites.LaserTank(self.battle_rect.x, self.screen_rect.width, self.battle_rect.height, TANK_SPEED,  self.player)
                     self.enemies.add(new_tank)
                     self.all_sprites.add(new_tank)

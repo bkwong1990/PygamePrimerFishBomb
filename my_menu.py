@@ -1,11 +1,8 @@
 import pygame
 
 from pygame.locals import (
-K_z,
-K_x,
 KEYDOWN,
 QUIT,
-K_SPACE,
 K_UP,
 K_DOWN,
 RLEACCEL
@@ -14,10 +11,10 @@ RLEACCEL
 SHADOW_OFFSET = 3
 
 class MenuItem:
-    def __init__(self, text, menu_action = None):
+    def __init__(self, text, menu_fun = None):
         self.text = text
         #function that takes a key parameter, return running, session_key
-        self.menu_action = menu_action
+        self.menu_fun = menu_fun
 
 
 
@@ -40,10 +37,14 @@ class BaseMenu:
         self.ready_to_draw = False
 
 
-    def add(self, text, menu_action):
-        self.items.append( MenuItem( text, menu_action ) )
+    def add(self, text, menu_fun):
+        self.items.append( MenuItem( text, menu_fun ) )
         if len(self.items) > 0:
             self.current_index = 0
+        self.ready_to_draw = False
+
+    def set_text_current_selection(self, text):
+        self.items[self.current_index].text = text
         self.ready_to_draw = False
 
     def process_input(self, key):
@@ -52,11 +53,12 @@ class BaseMenu:
             self.current_index = (self.current_index - 1) % len(self.items)
         elif key == K_DOWN :
             self.current_index = (self.current_index + 1) % len(self.items)
-        elif self.items[self.current_index].menu_action:
-            self.items[self.current_index].menu_action(key)
+        elif self.items[self.current_index].menu_fun:
+            self.items[self.current_index].menu_fun(key)
 
-    def init_draw_list(self):
+    def init_surf_rect_list(self):
         font_size = self.font.get_height()
+        self.surf_rect_list = []
         for i in range(len( self.items ) ):
             text = self.items[i].text
             text_surface = self.font.render(text, True, self.font_color)
@@ -82,7 +84,7 @@ class BaseMenu:
 
     def draw(self, screen):
         if not(self.ready_to_draw):
-            self.init_draw_list()
+            self.init_surf_rect_list()
 
         font_size = self.font.get_height()
 

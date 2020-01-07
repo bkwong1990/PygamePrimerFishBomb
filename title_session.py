@@ -5,7 +5,6 @@ exit
 import math
 import my_events
 import session
-import my_sprites
 import my_menu
 
 from pygame.locals import (
@@ -27,8 +26,9 @@ DARK_STEEL = (24,24,24)
 
 
 class TitleSession(session.Session):
-    def __init__(self, screen, config_dict):
-        super(TitleSession, self).__init__(screen, config_dict)
+    def __init__(self, screen, config_info):
+        super(TitleSession, self).__init__(screen, config_info)
+        # https://www.pexels.com/photo/photo-of-blue-sky-912110/
         self.background_surface = pygame.image.load("img/title_background.png").convert_alpha()
         self.next_session_key = "battle"
         menu_midtop = (math.floor(self.screen_rect.width * 0.7), math.floor(self.screen_rect.height * 0.3))
@@ -46,6 +46,12 @@ class TitleSession(session.Session):
                 pygame.event.post( pygame.event.Event( my_events.NEXTSESSION ) )
 
         self.menu.add("To Battle", on_battle_item)
+
+        def on_config_item(key):
+            if key == K_SPACE:
+                self.next_session_key = "config"
+                pygame.event.post( pygame.event.Event( my_events.NEXTSESSION ) )
+        self.menu.add("Configuration", on_config_item)
 
         def on_quit_item(key):
             if key == K_SPACE:
@@ -86,7 +92,7 @@ class TitleSession(session.Session):
         while running:
             running = self.handle_events( pygame.event.get() )
             self.screen.blit(self.background_surface, (0, 0) )
-            self.menu.init_draw_list()
+            #self.menu.init_surf_rect_list()
             self.menu.draw(self.screen)
 
             self.write_key_prompt()
