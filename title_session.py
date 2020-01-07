@@ -6,6 +6,7 @@ import math
 import my_events
 import session
 import my_menu
+import sound_helper
 
 from pygame.locals import (
 KEYDOWN,
@@ -23,11 +24,12 @@ SILVER = (192, 192, 192)
 WHITE = (255, 255, 255)
 DARK_STEEL = (24,24,24)
 
-
+#http://guru2.nobody.jp/music/sorato.mid
+BGM_PATH = "media/sorato.ogg"
 
 class TitleSession(session.Session):
-    def __init__(self, screen, config_info):
-        super(TitleSession, self).__init__(screen, config_info)
+    def __init__(self, screen):
+        super(TitleSession, self).__init__(screen)
         # https://www.pexels.com/photo/photo-of-blue-sky-912110/
         self.background_surface = pygame.image.load("img/title_background.png").convert_alpha()
         self.next_session_key = "battle"
@@ -76,6 +78,7 @@ class TitleSession(session.Session):
             elif event.type == my_events.NEXTSESSION:
                 running = False
             elif event.type == KEYDOWN:
+                sound_helper.play_clip("tactile_click")
                 if event.key == K_ESCAPE:
                     #pygame.quit()
                     #exit(0)
@@ -87,6 +90,7 @@ class TitleSession(session.Session):
 
 
     def run_loop(self):
+        sound_helper.load_music_file(BGM_PATH)
         running = True
         clock = pygame.time.Clock()
         while running:

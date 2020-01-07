@@ -9,6 +9,7 @@ import session
 import my_menu
 import config_helper
 import copy
+import sound_helper
 
 from battle_session import (
 HARD_SPEED_MIN,
@@ -36,11 +37,14 @@ BLUE = (0, 0, 255)
 SILVER = (192, 192, 192)
 DARK_STEEL = (24,24,24)
 
+#http://guru2.nobody.jp/music/sorato.mid
+BGM_PATH = "media/sorato.ogg"
+
 class ConfigSession(session.Session):
-    def __init__(self, screen, config_info):
-        super(ConfigSession, self).__init__(screen, config_info)
+    def __init__(self, screen):
+        super(ConfigSession, self).__init__(screen)
         #https://www.pexels.com/photo/architect-architecture-blueprint-build-271667/
-        self.config_candidate = copy.deepcopy(self.config_info)
+        self.config_candidate = copy.deepcopy(config_helper.config_info)
 
         self.background_surface = pygame.image.load("img/config_background.png").convert_alpha()
         self.next_session_key = "title"
@@ -85,13 +89,13 @@ class ConfigSession(session.Session):
 
         def on_save_and_return(key):
             if key == K_SPACE:
-                if self.config_info["fullscreen"] != self.config_candidate["fullscreen"]:
+                if config_helper.config_info["fullscreen"] != self.config_candidate["fullscreen"]:
                     if self.config_candidate["fullscreen"]:
                         pygame.display.set_mode( self.screen_rect.size , flags=pygame.SCALED|pygame.FULLSCREEN)
                     else:
                         pygame.display.set_mode( self.screen_rect.size , flags=pygame.SCALED)
-                self.config_info.update(self.config_candidate)
-                config_helper.save_config(self.config_info)
+                config_helper.config_info.update(self.config_candidate)
+                config_helper.save_config()
                 pygame.event.post( pygame.event.Event( my_events.NEXTSESSION ) )
         self.menu.add("Save and Return", on_save_and_return)
 
@@ -110,6 +114,7 @@ class ConfigSession(session.Session):
             elif event.type == my_events.NEXTSESSION:
                 running = False
             elif event.type == KEYDOWN:
+                sound_helper.play_clip("tactile_click")
                 if event.key == K_ESCAPE:
                     #pygame.quit()
                     #exit(0)
@@ -134,6 +139,7 @@ class ConfigSession(session.Session):
         self.screen.blit(text_surface, text_rect)
 
     def run_loop(self):
+        sound_helper.load_music_file(BGM_PATH)
         running = True
         clock = pygame.time.Clock()
         while running:

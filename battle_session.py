@@ -14,6 +14,8 @@ import my_sprites
 
 import my_events
 import session
+import sound_helper
+import config_helper
 
 #initialize mixer and pygame
 pygame.mixer.init()
@@ -43,29 +45,23 @@ TANK_SPEED = 1
 BOMB_DROP_SPEED = 10
 BOMB_RELOAD_TIME = 4000
 
-
-#dictionary to hold sound objects
-SOUND_DICT = {
-# http://soundbible.com/1986-Bomb-Exploding.html
-"explosion": pygame.mixer.Sound("media/explosion.ogg"),
-# http://soundbible.com/1771-Laser-Cannon.html
-"laser": pygame.mixer.Sound("media/Laser.ogg"),
-# voiced by Bradley Wong
-"reloaded": pygame.mixer.Sound("media/reloaded.ogg")
-}
+# "Go Without Seeing Back" by Makoto Saita https://big-up.style/musics/34958?wovn=en
+BGM_PATH = "media/01_go_without_seeing_back_.ogg"
 
 # a class representing a single session of gameplay
 class BattleSession(session.Session):
-    def __init__(self, screen, config_info):
-        super(BattleSession, self).__init__(screen, config_info)
+
+
+    def __init__(self, screen):
+        super(BattleSession, self).__init__(screen)
         self.can_bomb = True
         self.score = 0
         self.current_tank_count = 0
 
-        self.missile_maxspeed = config_info["missile_maxspeed"]
+        self.missile_maxspeed = config_helper.config_info["missile_maxspeed"]
         self.missile_maxpeed = max(min(HARD_SPEED_MAX, self.missile_maxspeed), HARD_SPEED_MIN)
 
-        self.max_tank_count = config_info["max_tank_count"]
+        self.max_tank_count = config_helper.config_info["max_tank_count"]
 
         self.init_sprite_groups()
 
@@ -94,12 +90,6 @@ class BattleSession(session.Session):
         self.battle_surf.fill(SKY_COLOR)
         self.battle_rect = self.battle_surf.get_rect(x = battle_x, y = 0)
         #return (battle_surf, battle_rect)
-
-    def start_bgm(self):
-        # "Go Without Seeing Back" by Makoto Saita https://big-up.style/musics/34958?wovn=en
-        pygame.mixer.music.load("media/01_go_without_seeing_back_.ogg")
-        pygame.mixer.music.play(loops=-1)
-
 
     def set_event_timers(self, missile_interval, cloud_interval, tank_interval):
         # timers for missiles, clouds, and the tank
@@ -188,16 +178,17 @@ class BattleSession(session.Session):
                 self.enemies.add(new_laser)
                 self.all_sprites.add(new_laser)
             elif event.type == my_events.MAKESOUND:
-                SOUND_DICT[event.sound_index].play()
+                #SOUND_DICT[event.sound_index].play()
+                sound_helper.play_clip(event.sound_index)
             elif event.type == my_events.ADDEXPLOSION:
                 new_explosion = my_sprites.Explosion(event.rect)
                 self.all_sprites.add(new_explosion)
                 self.misc_sprites.add(new_explosion)
-                SOUND_DICT["explosion"].play()
+                sound_helper.play_clip("explosion")
             elif event.type == my_events.RELOADBOMB:
                 if self.player.alive():
                     self.can_bomb = True
-                    SOUND_DICT["reloaded"].play()
+                    sound_helper.play_clip("reloaded")
             elif event.type == my_events.SCOREBONUS:
                 self.score += event.score
                 text_sprite = my_sprites.TextSprite("+ %d" % event.score, self.font, DARK_GREEN, event.center, SCORE_FRAME_DURATION, False)
@@ -218,7 +209,8 @@ class BattleSession(session.Session):
         info_surface.fill( WHITE )
 
         running = True
-        self.start_bgm()
+        #self.start_bgm()
+        sound_helper.load_music_file(BGM_PATH)
         while running:
             running = self.handle_events(pygame.event.get())
 
@@ -253,6 +245,6 @@ class BattleSession(session.Session):
             #Force fps
             clock.tick(60)
         self.stop_event_timers()
-        pygame.mixer.music.stop()
+        #pygame.mixer.music.stop()
         print("Final score: %015d" % self.score)
         return "title"
