@@ -12,7 +12,7 @@ A Pygame example where you control a plane that drops bombs on laser tanks. This
 
 The Republic of Piefon and the Empire of X-Ception are at war, with both sides using state-of-the-art magitechnology. You are a republic soldier who has been assigned a mission to test a prototype plane against an endless army of the empire's Heaven Piercer tanks, even though you're part of the republic's ground forces rather than their aerial forces. The plane itself lacks any equipment other than a magitech fish cloning machine, with the fish being genetically modified to explode on impact. All your parachutes are anvils and your plane's landing mechanism is malfunctioning for some reason, so you're basically flying your own coffin.
 
-On an unrelated note, several months ago, you and your bomber crew were witnesses who testified against your commanding officer in a military trial, only for the officer to get off scot-free for their war crimes and get hailed as a hero by the government and media. On another unrelated note, all the other corroborating witnesses were assigned to similar missions, with some becoming the protagonists of other Pygame primer derivatives and others becoming the protagonists of Minesweeper clones. On a third unrelated note, the crew of the surprisingly fragile Heaven Piercer tanks are people who posted unflattering memes about their emperor on social media.
+On an unrelated note, several months ago, you and your bomber crew were witnesses who testified against your commanding officer in a military trial, only for the officer to get off scot-free for their war crimes and get hailed as a hero by the government and media. On another unrelated note, all the other corroborating witnesses and dissenting officers were assigned to similar missions, with some becoming the protagonists of other Pygame primer derivatives and others becoming the protagonists of Minesweeper clones. On a third unrelated note, the crew of the surprisingly fragile Heaven Piercer tanks are people who posted and shared unflattering memes about their emperor on social media.
 
 # How to play
 
@@ -25,6 +25,7 @@ On an unrelated note, several months ago, you and your bomber crew were witnesse
 * Your score will increase over time and will increase more the faster the missiles move. Each active tank will increase your score even faster.
 * Missiles and tanks can be destroyed by bombing them or if your plane collides with them. They're worth 1000 and 10000 pts respectively.
 * The tank will shoot lasers, which can only be destroyed by bombs but will disappear in 1/6 of a second. They're worth 20000 pts.
+* To get on the high score list, you must surpass the current 5th best score on the highest difficulty settings.
 
 # Python Files
 
@@ -36,12 +37,14 @@ On an unrelated note, several months ago, you and your bomber crew were witnesse
 * title_session.py: A python file containing code needed to run the title screen
 * config_session.py: A python file allowing the user to adjust game settings
 * config_helper.py: Includes functions to read and write the config.json file
+* input_score_session.py: Gets keyboard input from the user to enter a name for their highscore
+* view_scores_session.py: Shows a list of the top five scores
+* score_helper.py: Includes functions to load and save high scores
 
 # To-do list
 
 * Add a short synopsis
 * Add a tutorial
-* Implement a way to record the top 5 scores
 * Credits for assets
 * Export the game to a convenient executable
 * Release by Jan 10 2020

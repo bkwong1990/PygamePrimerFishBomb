@@ -11,7 +11,9 @@ SOUND_DICT = {
 # voiced by Bradley Wong
 "reloaded": pygame.mixer.Sound("media/reloaded.ogg"),
 # Recorded the sound of a Kailh Navy switch
-"tactile_click": pygame.mixer.Sound("media/kailh_navy.ogg")
+"tactile_click": pygame.mixer.Sound("media/kailh_navy.ogg"),
+# http://soundbible.com/1647-Ovation.html
+"ovation": pygame.mixer.Sound("media/ovation.ogg")
 }
 
 current_filename = ""

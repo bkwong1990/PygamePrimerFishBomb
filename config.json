@@ -1,5 +1,5 @@
 {
   "fullscreen" : false, 
-  "missile_maxspeed" : 25, 
+  "missile_maxspeed" : 30, 
   "max_tank_count" : 3
 }

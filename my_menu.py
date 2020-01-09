@@ -18,13 +18,12 @@ class MenuItem:
 
 
 
-class BaseMenu:
+class VerticalMenu:
 
-    def __init__(self, font, font_color, shadow_font, shadow_font_color, menu_color, selection_color, midtop):
+    def __init__(self, font, font_color, shadow_font_color, menu_color, selection_color, midtop):
         self.items = []
         self.font = font
         self.font_color = font_color
-        self.shadow_font = shadow_font
         self.shadow_font_color = shadow_font_color
         self.menu_color = menu_color
         self.selection_color = selection_color
@@ -37,7 +36,7 @@ class BaseMenu:
         self.ready_to_draw = False
 
 
-    def add(self, text, menu_fun):
+    def add(self, text, menu_fun = None):
         self.items.append( MenuItem( text, menu_fun ) )
         if len(self.items) > 0:
             self.current_index = 0
@@ -65,7 +64,7 @@ class BaseMenu:
             text_rect = text_surface.get_rect(center = self.midtop)
             text_rect.move_ip(0, font_size * (2*i + 1))
 
-            shadow_surface = self.shadow_font.render(text, True, self.shadow_font_color)
+            shadow_surface = self.font.render(text, True, self.shadow_font_color)
             shadow_rect = shadow_surface.get_rect(center = self.midtop)
             shadow_rect.move_ip(SHADOW_OFFSET, font_size * (2*i + 1) + SHADOW_OFFSET)
 
@@ -88,7 +87,7 @@ class BaseMenu:
 
         font_size = self.font.get_height()
 
-        menu_height = font_size * (2 * len(self.items) + 1)
+        menu_height = font_size * (2 * len(self.items) )
         menu_rect = pygame.Rect(0, 0, self.menu_width, menu_height )
         menu_rect.midtop = self.midtop
 

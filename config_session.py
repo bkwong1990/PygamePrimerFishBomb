@@ -11,13 +11,6 @@ import config_helper
 import copy
 import sound_helper
 
-from battle_session import (
-HARD_SPEED_MIN,
-HARD_SPEED_MAX,
-HARD_TANK_COUNT_MIN,
-HARD_TANK_COUNT_MAX
-)
-
 from pygame.locals import (
 KEYDOWN,
 QUIT,
@@ -31,18 +24,14 @@ RLEACCEL
 MENU_FONT_SIZE = 60
 KEYPROMPT_FONT_SIZE = 28
 
-RED = (255, 0, 0)
-BLACK = (0, 0, 0)
-BLUE = (0, 0, 255)
-SILVER = (192, 192, 192)
-DARK_STEEL = (24,24,24)
+from session import *
 
 #http://guru2.nobody.jp/music/sorato.mid
 BGM_PATH = "media/sorato.ogg"
 
-class ConfigSession(session.Session):
-    def __init__(self, screen):
-        super(ConfigSession, self).__init__(screen)
+class ConfigSession(Session):
+    def __init__(self, screen, misc_dict):
+        super(ConfigSession, self).__init__(screen, misc_dict)
         #https://www.pexels.com/photo/architect-architecture-blueprint-build-271667/
         self.config_candidate = copy.deepcopy(config_helper.config_info)
 
@@ -52,11 +41,10 @@ class ConfigSession(session.Session):
         menu_midtop = (math.floor(self.screen_rect.width * 0.5), math.floor(self.screen_rect.height * 0.2))
 
         self.font = pygame.font.Font(None, MENU_FONT_SIZE )
-        self.shadow_font = pygame.font.Font(None, MENU_FONT_SIZE)
 
         self.key_prompt_font = pygame.font.Font(None, KEYPROMPT_FONT_SIZE )
 
-        self.menu = my_menu.BaseMenu(self.font, BLUE, self.shadow_font, BLACK, DARK_STEEL, SILVER, menu_midtop)
+        self.menu = my_menu.VerticalMenu(self.font, BLUE, BLACK, DARK_STEEL, SILVER, menu_midtop)
 
         def on_fullscreen_item(key):
             if key == K_SPACE:
@@ -68,10 +56,9 @@ class ConfigSession(session.Session):
         def on_missile_speed_item(key):
             if key == K_LEFT:
                 self.config_candidate["missile_maxspeed"] -= 5
-                self.config_candidate["missile_maxspeed"] = max(self.config_candidate["missile_maxspeed"], HARD_SPEED_MIN)
             elif key == K_RIGHT:
                 self.config_candidate["missile_maxspeed"] += 5
-                self.config_candidate["missile_maxspeed"] = min(self.config_candidate["missile_maxspeed"], HARD_SPEED_MAX)
+            self.config_candidate["missile_maxspeed"] = config_helper.correct_missile_speed(self.config_candidate["missile_maxspeed"])
             self.menu.set_text_current_selection("Missile Max Speed: " + str(self.config_candidate["missile_maxspeed"]))
 
         self.menu.add("Missile Max Speed: " + str(self.config_candidate["missile_maxspeed"]), on_missile_speed_item)
@@ -79,10 +66,9 @@ class ConfigSession(session.Session):
         def on_tank_count_item(key):
             if key == K_LEFT:
                 self.config_candidate["max_tank_count"] -= 1
-                self.config_candidate["max_tank_count"] = max(self.config_candidate["max_tank_count"], HARD_TANK_COUNT_MIN)
             elif key == K_RIGHT:
                 self.config_candidate["max_tank_count"] += 1
-                self.config_candidate["max_tank_count"] = min(self.config_candidate["max_tank_count"], HARD_TANK_COUNT_MAX)
+            self.config_candidate["max_tank_count"] = config_helper.correct_tank_count(self.config_candidate["max_tank_count"])
             self.menu.set_text_current_selection("Max Tank Count: " + str(self.config_candidate["max_tank_count"]))
 
         self.menu.add("Max Tank Count: " + str(self.config_candidate["max_tank_count"]), on_tank_count_item)
@@ -123,20 +109,7 @@ class ConfigSession(session.Session):
                     self.menu.process_input(event.key)
 
         return running
-
-    def write_key_prompt(self):
-        text_surface = self.key_prompt_font.render("Space to confirm, up/down keys to change selection, left/right keys to adjust numerical values", True, RED)
-        text_rect = text_surface.get_rect(center = (math.floor(self.screen_rect.width * 0.5), math.floor(self.screen_rect.height * 0.97)) )
-
-        back_rect = text_rect.copy()
-        back_rect.width += 10
-        back_rect.height += 5
-        back_rect.center = text_rect.center
-
-        back_surf = pygame.Surface(back_rect.size)
-        back_surf.fill(DARK_STEEL)
-        self.screen.blit(back_surf, back_rect)
-        self.screen.blit(text_surface, text_rect)
+    
 
     def run_loop(self):
         sound_helper.load_music_file(BGM_PATH)
@@ -148,9 +121,9 @@ class ConfigSession(session.Session):
             #self.menu.init_surf_rect_list()
             self.menu.draw(self.screen)
 
-            self.write_key_prompt()
+            self.write_key_prompt("Space to confirm, up/down keys to change selection, left/right keys to adjust numerical values")
 
             pygame.display.flip()
 
             clock.tick(60)
-        return self.next_session_key
+        return self.next_session_key, {}

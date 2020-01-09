@@ -15,32 +15,24 @@ K_SPACE,
 K_ESCAPE
 )
 
-MENU_FONT_SIZE = 80
-KEYPROMPT_FONT_SIZE = 28
+from session import *
 
-RED = (255, 0, 0)
-BLACK = (0, 0, 0)
-SILVER = (192, 192, 192)
-WHITE = (255, 255, 255)
-DARK_STEEL = (24,24,24)
+MENU_FONT_SIZE = 60
 
 #http://guru2.nobody.jp/music/sorato.mid
 BGM_PATH = "media/sorato.ogg"
 
 class TitleSession(session.Session):
-    def __init__(self, screen):
-        super(TitleSession, self).__init__(screen)
+    def __init__(self, screen, misc_dict):
+        super(TitleSession, self).__init__(screen, misc_dict)
         # https://www.pexels.com/photo/photo-of-blue-sky-912110/
         self.background_surface = pygame.image.load("img/title_background.png").convert_alpha()
         self.next_session_key = "battle"
         menu_midtop = (math.floor(self.screen_rect.width * 0.7), math.floor(self.screen_rect.height * 0.3))
 
         self.font = pygame.font.Font(None, MENU_FONT_SIZE )
-        self.shadow_font = pygame.font.Font(None, MENU_FONT_SIZE)
 
-        self.key_prompt_font = pygame.font.Font(None, KEYPROMPT_FONT_SIZE )
-
-        self.menu = my_menu.BaseMenu(self.font, RED, self.shadow_font, BLACK, DARK_STEEL, SILVER, menu_midtop)
+        self.menu = my_menu.VerticalMenu(self.font, RED, BLACK, DARK_STEEL, SILVER, menu_midtop)
 
         def on_battle_item(key):
             if key == K_SPACE:
@@ -48,6 +40,12 @@ class TitleSession(session.Session):
                 pygame.event.post( pygame.event.Event( my_events.NEXTSESSION ) )
 
         self.menu.add("To Battle", on_battle_item)
+
+        def on_view_scores_item(key):
+            if key == K_SPACE:
+                self.next_session_key = "view_scores"
+                pygame.event.post( pygame.event.Event( my_events.NEXTSESSION ) )
+        self.menu.add("View Scores (Hardest Settings)", on_view_scores_item)
 
         def on_config_item(key):
             if key == K_SPACE:
@@ -61,13 +59,6 @@ class TitleSession(session.Session):
                 pygame.event.post( pygame.event.Event( my_events.NEXTSESSION ) )
 
         self.menu.add("Soft Quit", on_quit_item)
-
-
-    def write_key_prompt(self):
-        text_surface = self.key_prompt_font.render("Space to confirm, arrow keys to change menu selection", True, BLACK)
-        text_rect = text_surface.get_rect(center = (math.floor(self.screen_rect.width * 0.7), math.floor(self.screen_rect.height * 0.97)) )
-        self.screen.blit(text_surface, text_rect)
-
 
     def handle_events(self, events):
         running = True
@@ -99,9 +90,9 @@ class TitleSession(session.Session):
             #self.menu.init_surf_rect_list()
             self.menu.draw(self.screen)
 
-            self.write_key_prompt()
+            self.write_key_prompt("Space to confirm, arrow keys to change menu selection")
 
             pygame.display.flip()
 
             clock.tick(60)
-        return self.next_session_key
+        return self.next_session_key, {}

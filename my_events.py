@@ -15,6 +15,6 @@ def post_explosion(rect):
     explosion_event = pygame.event.Event(ADDEXPLOSION, rect = rect)
     pygame.event.post(explosion_event)
 
-def post_score_bonus(score, center):
-    score_bonus_event = pygame.event.Event(SCOREBONUS, score = score, center = center)
+def post_score_bonus(enemy_name, center):
+    score_bonus_event = pygame.event.Event(SCOREBONUS, enemy_name = enemy_name, center = center)
     pygame.event.post(score_bonus_event)

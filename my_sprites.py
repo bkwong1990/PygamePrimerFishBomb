@@ -91,7 +91,7 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
         self.kill_on_contact = True
-        self.score = 0
+        self.enemy_name = ""
         self.rect = None
         self.explode_on_death = True
     '''
@@ -102,9 +102,9 @@ class Enemy(pygame.sprite.Sprite):
         self: the calling object
     '''
     def kill(self):
-        #If score is greater than zero, post a bonus score event
-        if self.score > 0:
-            post_score_bonus(self.score, self.rect.center)
+        #Post score bonus event
+        if self.enemy_name != "":
+            post_score_bonus(self.enemy_name, self.rect.center)
         #If the enemy is supposed to explode on death, post an explosion event
         if self.explode_on_death:
             post_explosion(self.rect)
@@ -134,7 +134,7 @@ class Missile(Enemy):
         )
         self.left_bound = left_bound
         self.speed = random.randint(5, missile_maxspeed)
-        self.score = 1000
+        self.enemy_name = "missile"
     '''
     Updates the missile's position. The missile will be killed upon going through the left side of the containing space.
     Parameters:
@@ -216,7 +216,7 @@ class LaserTank(Enemy):
 
         self.frames_until_movement = 0;
 
-        self.score = 10000
+        self.enemy_name = "tank"
 
     '''
     Updates the tank's position. The tank will track the player, but cannot pass the boundaries of the screen.
@@ -284,7 +284,7 @@ class Laser(Enemy):
         self.frame_duration = Laser.LASER_DURATION
         self.kill_on_contact = False
         #Making the laser and player bomb collide is difficult, but possible
-        self.score = 20000
+        self.enemy_name = "laser"
         self.explode_on_death = False
     '''
     Updates the laser's position and counts down the frames until the laser expires

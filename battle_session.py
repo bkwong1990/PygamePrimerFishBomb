@@ -16,6 +16,9 @@ import my_events
 import session
 import sound_helper
 import config_helper
+import score_helper
+
+
 
 #initialize mixer and pygame
 pygame.mixer.init()
@@ -23,20 +26,9 @@ pygame.init()
 
 FONT_SIZE = 28
 
-#Speed limits
-
-HARD_SPEED_MAX = 50
-HARD_SPEED_MIN = 10
-
-# Tank count limits
-HARD_TANK_COUNT_MAX = 4
-HARD_TANK_COUNT_MIN = 1
-
 SCORE_FRAME_DURATION = 60
 
 SKY_COLOR = (135, 206, 235)
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
 DARK_GREEN = (0, 100, 0)
 
 PLAYER_SPEED = 7
@@ -52,14 +44,13 @@ BGM_PATH = "media/01_go_without_seeing_back_.ogg"
 class BattleSession(session.Session):
 
 
-    def __init__(self, screen):
-        super(BattleSession, self).__init__(screen)
+    def __init__(self, screen, misc_dict):
+        super(BattleSession, self).__init__(screen, misc_dict)
         self.can_bomb = True
         self.score = 0
         self.current_tank_count = 0
 
-        self.missile_maxspeed = config_helper.config_info["missile_maxspeed"]
-        self.missile_maxpeed = max(min(HARD_SPEED_MAX, self.missile_maxspeed), HARD_SPEED_MIN)
+        self.missile_top_speed = config_helper.config_info["missile_maxspeed"]
 
         self.max_tank_count = config_helper.config_info["max_tank_count"]
 
@@ -123,19 +114,29 @@ class BattleSession(session.Session):
                 #Prepare to quit
                 pygame.time.set_timer(my_events.NEXTSESSION, 3000, True)
             # Add survival points to score
-            self.score += self.missile_maxspeed + (100 * self.current_tank_count)
+            self.score += self.missile_top_speed + (score_helper.SCORE_PER_LIVING_TANK * self.current_tank_count)
 
     def write_info(self, clock):
-        #display score
-        score_text = self.font.render("Score: %015d" % self.score, True, BLACK )
+        #display current score
+        score_text = self.font.render("Score: %d" % self.score, True, session.BLACK )
         self.screen.blit(score_text, (5, 5))
-        #displayspeed
-        speed_text = self.font.render("Speed: %03d" % self.missile_maxspeed, True, BLACK )
-        self.screen.blit(speed_text, (5, self.font.get_height() * 2))
+
+        top_score = 0 if len(score_helper.scores) == 0 else score_helper.scores[0]["score"]
+
+        #display top score
+        top_score_text = self.font.render("Top Score: %d" % top_score, True, session.BLACK )
+        self.screen.blit(top_score_text, (5, self.font.get_height() * 2))
+        #display speed
+        speed_text = self.font.render("Speed: %d" % self.missile_top_speed, True, session.BLACK )
+        self.screen.blit(speed_text, (5, self.font.get_height() * 4))
+
+        #display max tank count
+        tank_text = self.font.render("Max allowed tanks: %d" % self.max_tank_count, True, session.BLACK )
+        self.screen.blit(tank_text, (5, self.font.get_height() * 6))
 
         #Display FPS
-        fps_text = self.font.render("FPS: %.2f" % clock.get_fps(), True, BLACK )
-        self.screen.blit(fps_text, (5, self.font.get_height() * 4))
+        fps_text = self.font.render("FPS: %.2f" % clock.get_fps(), True, session.BLACK )
+        self.screen.blit(fps_text, (5, self.font.get_height() * 8))
 
     def handle_events(self, events):
 
@@ -157,7 +158,7 @@ class BattleSession(session.Session):
                 exit(0)
             elif event.type == my_events.ADDMISSILE:
                 #create a new enemy and add it to sprite groups
-                new_missile = my_sprites.Missile(self.battle_rect.x, self.screen_rect.width, self.battle_rect.y, self.battle_rect.height, self.missile_maxspeed)
+                new_missile = my_sprites.Missile(self.battle_rect.x, self.screen_rect.width, self.battle_rect.y, self.battle_rect.height, self.missile_top_speed)
                 self.enemies.add(new_missile)
                 self.all_sprites.add(new_missile)
             elif event.type == my_events.ADDCLOUD:
@@ -190,8 +191,9 @@ class BattleSession(session.Session):
                     self.can_bomb = True
                     sound_helper.play_clip("reloaded")
             elif event.type == my_events.SCOREBONUS:
-                self.score += event.score
-                text_sprite = my_sprites.TextSprite("+ %d" % event.score, self.font, DARK_GREEN, event.center, SCORE_FRAME_DURATION, False)
+                bonus_score = score_helper.ENEMY_SCORES[event.enemy_name]
+                self.score += bonus_score
+                text_sprite = my_sprites.TextSprite("+ %d" % bonus_score, self.font, DARK_GREEN, event.center, SCORE_FRAME_DURATION, False)
                 self.temp_text_sprites.add(text_sprite)
             elif event.type == my_events.TANKDEATH:
                 self.current_tank_count -= 1
@@ -206,7 +208,7 @@ class BattleSession(session.Session):
 
         #create info Surface
         info_surface = pygame.Surface( (self.battle_rect.x, self.screen_rect.height) )
-        info_surface.fill( WHITE )
+        info_surface.fill( session.WHITE )
 
         running = True
         #self.start_bgm()
@@ -222,7 +224,7 @@ class BattleSession(session.Session):
             self.simple_update_all()
 
             #fill screen with white
-            self.screen.fill( WHITE )
+            self.screen.fill( session.WHITE )
 
             #draw battle portion of screen
             self.screen.blit(self.battle_surf, self.battle_rect )
@@ -247,4 +249,7 @@ class BattleSession(session.Session):
         self.stop_event_timers()
         #pygame.mixer.music.stop()
         print("Final score: %015d" % self.score)
-        return "title"
+        #return "title", self.misc_dict
+        if score_helper.can_add_score(self.score) and config_helper.is_on_hardest_setting():
+            return "input_score", {"score": self.score}
+        return "title", {}
