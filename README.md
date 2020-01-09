@@ -41,6 +41,45 @@ On an unrelated note, several months ago, you and your bomber crew were witnesse
 * view_scores_session.py: Shows a list of the top five scores
 * score_helper.py: Includes functions to load and save high scores
 
+# Credits
+
+## Audio
+* I personally recorded kailh_navy.ogg and reloaded.ogg
+* 01_go_without_seeing_back_.ogg  
+ * [Go Without Seeing Back by Makoto Saita](https://big-up.style/musics/34958?wovn=en)
+* sorato.ogg
+ * [Sora by Misaki Shin / G2-Midi](http://guru2.nobody.jp/music/town.htm)
+* laser.ogg
+ * [Laser Cannon by Mike Koenig](http://soundbible.com/1771-Laser-Cannon.html)
+* explosion.ogg
+ * [Bomb Exploding by Sound Explorer](http://soundbible.com/1986-Bomb-Exploding.html)
+* ovation.ogg
+ * [Ovation Sound by Mike Koenig](http://soundbible.com/1647-Ovation.html)
+
+## Images
+* I personally made spacebar.png and spacebar_no.png using a combination of Pixel Art Maker and GIMP.
+* laser.png was made by me using GIMP
+* keyboard.png was taken by my phone
+* cloud.png
+ * [Cloud Cartoon from cleanpng](https://www.cleanpng.com/png-cloud-computing-dust-676210/preview.html)
+* config_background.png
+ * [by Pixabay](https://www.pexels.com/photo/architect-architecture-blueprint-build-271667/)
+* explosion.png
+ * [Example Sprite Sheet Animation - Sprite Sheet Particle Unity
+from pnglot](https://www.pnglot.com/i/hJJxmbR_example-sprite-sheet-animation-sprite-sheet-particle-unity/)
+* fish_bomb.png
+ * [2D Retro Fish by EXCITESZZ](https://opengameart.org/content/2d-retro-fish)
+* jet.png
+ * [Figther Jet by Juan Garces, ES ](https://thenounproject.com/term/fighter-jet/59845/)
+* missile.png
+ * [Missile No Background from Premium BP Themes](https://premiumbpthemes.com/explore/missile-transparent-background.html)
+* newspaper.png
+ * [by brotiN biswaS](https://www.pexels.com/photo/advertisements-batch-blur-business-518543/)
+* tank.png
+ * [Tank Sprite from Hunt PNG](https://huntpng.com/keyword/tank-sprite-png)
+* title_background.png
+ * [by Elia Clerici](https://www.pexels.com/photo/photo-of-blue-sky-912110/)
+
 # To-do list
 
 * Add a short synopsis
