@@ -1,7 +1,4 @@
 import pygame
-from sys import (
-exit
-)
 
 from pygame.locals import (
 KEYDOWN,
@@ -19,18 +16,20 @@ import config_helper
 import score_helper
 
 
-
+'''
 #initialize mixer and pygame
 pygame.mixer.init()
 pygame.init()
-
+'''
 FONT_SIZE = 28
 
+#Score indicators should expire in 60 frames or 1 second
 SCORE_FRAME_DURATION = 60
 
+#Some colors not used in other session classes
 SKY_COLOR = (135, 206, 235)
 DARK_GREEN = (0, 100, 0)
-
+#other variables for gameplay
 PLAYER_SPEED = 7
 CLOUD_SPEED = 2
 TANK_SPEED = 1
@@ -43,7 +42,13 @@ BGM_PATH = "media/01_go_without_seeing_back_.ogg"
 # a class representing a single session of gameplay
 class BattleSession(session.Session):
 
-
+    '''
+    Creates a new battle session
+    Parameters:
+        self: the object being created
+        screen: the surface of the gameplay window
+        misc_dict: A dictionary with any additional arguments in case the next session needs it
+    '''
     def __init__(self, screen, misc_dict):
         super(BattleSession, self).__init__(screen, misc_dict)
         self.can_bomb = True
@@ -64,6 +69,11 @@ class BattleSession(session.Session):
         self.spacebar_prompt = my_sprites.MovingSpaceBarPrompt(self.player, (0, self.player.rect.height))
         self.all_sprites.add(self.player, self.spacebar_prompt)
 
+    '''
+    Initializes the session's sprite groups
+    Parameters:
+        self: the calling object
+    '''
     def init_sprite_groups(self):
         self.enemies = pygame.sprite.Group()
         self.player_projectiles = pygame.sprite.Group()
@@ -71,6 +81,11 @@ class BattleSession(session.Session):
         self.temp_text_sprites = pygame.sprite.Group()
         self.all_sprites = pygame.sprite.Group()
 
+    '''
+    Initializes the surface and rectangle used to display the gameplay combat
+    Parameters:
+        self: the calling object
+    '''
     def init_battle_area(self):
         # create battle surface based on the screen dimensions
         battle_width = 1000
@@ -80,27 +95,50 @@ class BattleSession(session.Session):
         self.battle_surf = pygame.Surface( (battle_width, battle_height) )
         self.battle_surf.fill(SKY_COLOR)
         self.battle_rect = self.battle_surf.get_rect(x = battle_x, y = 0)
-        #return (battle_surf, battle_rect)
 
+
+    '''
+    Sets the timer for events that must occur periodically
+    Parameters:
+        self: the calling object
+        missile_interval: the interval of missile spawn in milliseconds
+        cloud_interval: the interval of cloud spawn in milliseconds
+        tank_interval: the interval of tank spawn in milliseconds
+    '''
     def set_event_timers(self, missile_interval, cloud_interval, tank_interval):
         # timers for missiles, clouds, and the tank
         pygame.time.set_timer(my_events.ADDMISSILE, missile_interval)
         pygame.time.set_timer(my_events.ADDCLOUD, cloud_interval)
         pygame.time.set_timer(my_events.ADDTANK, tank_interval)
 
+    '''
+    Stops all the repeating event timers
+    Parameters:
+        self: the calling object
+    '''
     def stop_event_timers(self):
         #Setting the time interval to 0 stop the events from being posted.
         pygame.time.set_timer(my_events.ADDMISSILE, 0)
         pygame.time.set_timer(my_events.ADDCLOUD, 0)
         pygame.time.set_timer(my_events.ADDTANK, 0)
         print("Battle event timers have been stopped")
-
+    '''
+    Updates all sprite groups that use the empty update method
+    Parameters:
+        self: the calling object
+    '''
     def simple_update_all(self):
         self.enemies.update()
         self.misc_sprites.update()
         self.player_projectiles.update()
         self.temp_text_sprites.update()
 
+    '''
+    Checks if the player has collided with an enemy and adds points if they survived. If not,
+    prepare to end the gameplay session.
+    Parameters:
+        self: the calling object
+    '''
     def check_player_life(self):
         if self.player.alive():
             #If a collision occured, enemy_collider will be non-None, an actual enemy
@@ -116,6 +154,12 @@ class BattleSession(session.Session):
             # Add survival points to score
             self.score += self.missile_top_speed + (score_helper.SCORE_PER_LIVING_TANK * self.current_tank_count)
 
+    '''
+    Writes information to the info section of the screen
+    Parameters:
+        self: the calling object
+        clock: the clock that manages the game's speed
+    '''
     def write_info(self, clock):
         #display current score
         score_text = self.font.render("Score: %d" % self.score, True, session.BLACK )
@@ -138,24 +182,32 @@ class BattleSession(session.Session):
         fps_text = self.font.render("FPS: %.2f" % clock.get_fps(), True, session.BLACK )
         self.screen.blit(fps_text, (5, self.font.get_height() * 8))
 
+    '''
+    Executes code based on what events are posted
+    Parameters:
+        self: the calling object
+        events: the collection of events
+    Return: a boolean indicating if the main loop should continue
+    '''
     def handle_events(self, events):
 
         running = True
         for event in events:
             if event.type == KEYDOWN:
                 if event.key == K_SPACE:
+                    #The player shouldn't be able to launch bombs if they're dead
                     if self.can_bomb & self.player.alive():
                         new_bomb = my_sprites.PlayerBomb(self.player.rect.centerx, self.player.rect.bottom, self.battle_rect.height, BOMB_DROP_SPEED)
                         self.all_sprites.add(new_bomb)
                         self.player_projectiles.add(new_bomb)
                         self.can_bomb = False
+                        #The bomb has a reload time to force the player to fight accurately
                         pygame.time.set_timer(my_events.RELOADBOMB, BOMB_RELOAD_TIME, True)
-                    elif event.key == K_ESCAPE:
-                        pygame.quit()
-                        exit(0)
+                elif event.key == K_ESCAPE:
+                    session.force_quit()
+            #This will force the entire game to quit irregularly.
             elif event.type == QUIT:
-                pygame.quit()
-                exit(0)
+                session.force_quit()
             elif event.type == my_events.ADDMISSILE:
                 #create a new enemy and add it to sprite groups
                 new_missile = my_sprites.Missile(self.battle_rect.x, self.screen_rect.width, self.battle_rect.y, self.battle_rect.height, self.missile_top_speed)
@@ -168,6 +220,7 @@ class BattleSession(session.Session):
                 self.all_sprites.add(new_cloud)
             elif event.type == my_events.ADDTANK:
                 if self.current_tank_count < self.max_tank_count:
+                    #Creates a new tank and increments the counter of tanks
                     new_tank = my_sprites.LaserTank(self.battle_rect.x, self.screen_rect.width, self.battle_rect.height, TANK_SPEED,  self.player)
                     self.enemies.add(new_tank)
                     self.all_sprites.add(new_tank)
@@ -179,7 +232,7 @@ class BattleSession(session.Session):
                 self.enemies.add(new_laser)
                 self.all_sprites.add(new_laser)
             elif event.type == my_events.MAKESOUND:
-                #SOUND_DICT[event.sound_index].play()
+                #legacy event to make a sound clip play
                 sound_helper.play_clip(event.sound_index)
             elif event.type == my_events.ADDEXPLOSION:
                 new_explosion = my_sprites.Explosion(event.rect)
@@ -187,6 +240,7 @@ class BattleSession(session.Session):
                 self.misc_sprites.add(new_explosion)
                 sound_helper.play_clip("explosion")
             elif event.type == my_events.RELOADBOMB:
+                #Reloading is impossible if the player is dead
                 if self.player.alive():
                     self.can_bomb = True
                     sound_helper.play_clip("reloaded")
@@ -196,12 +250,20 @@ class BattleSession(session.Session):
                 text_sprite = my_sprites.TextSprite("+ %d" % bonus_score, self.font, DARK_GREEN, event.center, SCORE_FRAME_DURATION, False)
                 self.temp_text_sprites.add(text_sprite)
             elif event.type == my_events.TANKDEATH:
+                #the max statement might not be needed, but it's there in case the count was not incremented properly in ADDTANK
                 self.current_tank_count -= 1
                 self.current_tank_count = max(self.current_tank_count, 0)
+            #The main loop should terminate and the game should move onto the next session
             elif event.type == my_events.NEXTSESSION:
                 running = False
         return running
 
+    '''
+    Runs the main loop until events force it to quit
+    Parameters:
+        self: the calling object
+    Return: the string key for the next session, a dict containing values needed for the next session
+    '''
     def run_loop(self):
         clock = pygame.time.Clock()
         self.set_event_timers(missile_interval = 500, cloud_interval = 1000, tank_interval = 6000)
@@ -249,7 +311,8 @@ class BattleSession(session.Session):
         self.stop_event_timers()
         #pygame.mixer.music.stop()
         print("Final score: %015d" % self.score)
-        #return "title", self.misc_dict
-        if score_helper.can_add_score(self.score) and config_helper.is_on_hardest_setting():
+        # The score should get added if it's higher than 5th place and the game difficulty is maxed
+        if score_helper.is_score_high_enough(self.score) and config_helper.is_on_hardest_setting():
             return "input_score", {"score": self.score}
+        # If the score and difficulty are insufficient, return to title
         return "title", {}

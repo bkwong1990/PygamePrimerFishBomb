@@ -21,7 +21,7 @@ SCREEN_HEIGHT = 720
 SCREEN = pygame.display.set_mode( (SCREEN_WIDTH, SCREEN_HEIGHT) , flags=pygame.SCALED)
 
 
-
+# dictionary to conveniently access session class names
 session_dict = {
 "title": title_session.TitleSession,
 "battle": battle_session.BattleSession,
@@ -30,8 +30,10 @@ session_dict = {
 "view_scores": view_scores_session.ViewScoresSession
 }
 
+
 config_helper.load_config_info()
 
+# after loading config information, set the game to fullscreen if necessary
 if config_helper.config_info["fullscreen"]:
     pygame.display.set_mode( (SCREEN_WIDTH, SCREEN_HEIGHT) , flags=pygame.SCALED|pygame.FULLSCREEN)
 
@@ -42,12 +44,14 @@ sound_helper.set_volume(0.45)
 
 score_helper.load_scores()
 
+# Start with the title screen
 session_key = "title"
 misc_dict = {}
 running = True
 while running:
     current_session = session_dict[session_key](SCREEN, misc_dict)
     session_key, misc_dict = current_session.run_loop()
+    # A session key value of None means to soft quit the game
     if not(session_key):
         running = False
 
