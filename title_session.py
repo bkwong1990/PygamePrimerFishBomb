@@ -85,28 +85,12 @@ class TitleSession(Session):
 
         self.menu.add("Soft Quit", on_quit_item)
 
-    '''
-    Executes code based on what events are posted
-    Parameters:
-        self: the calling object
-        events: the collection of events
-    Return: a boolean indicating if the main loop should continue
-    '''
-    def handle_events(self, events):
-        running = True
-        for event in events:
-            if event.type == QUIT:
-                force_quit()
-            elif event.type == my_events.NEXTSESSION:
-                running = False
-            elif event.type == KEYDOWN:
-                sound_helper.play_clip("tactile_click")
-                if event.key == K_ESCAPE:
-                    force_quit()
-                else:
-                    self.menu.process_input(event.key)
-
-        return running
+    def on_keydown(self, event):
+        Session.on_keydown(self, event)
+        if event.key == K_ESCAPE:
+            force_quit()
+        else:
+            self.menu.process_input(event.key)
 
     '''
     Runs the main loop until events force it to quit
@@ -116,10 +100,10 @@ class TitleSession(Session):
     '''
     def run_loop(self):
         sound_helper.load_music_file(BGM_PATH)
-        running = True
+        self.running = True
         clock = pygame.time.Clock()
-        while running:
-            running = self.handle_events( pygame.event.get() )
+        while self.running:
+            self.handle_events( pygame.event.get() )
             self.screen.blit(self.background_surface, (0, 0) )
             #self.menu.init_surf_rect_list()
             self.menu.draw(self.screen)

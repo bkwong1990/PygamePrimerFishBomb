@@ -69,6 +69,17 @@ class BattleSession(session.Session):
         self.spacebar_prompt = my_sprites.MovingSpaceBarPrompt(self.player, (0, self.player.rect.height))
         self.all_sprites.add(self.player, self.spacebar_prompt)
 
+        self.click_on_keypress = False
+
+        self.event_handler_dict[my_events.ADDMISSILE] = self.on_add_missile
+        self.event_handler_dict[my_events.ADDCLOUD] = self.on_add_cloud
+        self.event_handler_dict[my_events.ADDTANK] = self.on_add_tank
+        self.event_handler_dict[my_events.ADDLASER] = self.on_add_laser
+        self.event_handler_dict[my_events.ADDEXPLOSION] = self.on_add_explosion
+        self.event_handler_dict[my_events.RELOADBOMB] = self.on_reload_bomb
+        self.event_handler_dict[my_events.SCOREBONUS] = self.on_score_bonus
+        self.event_handler_dict[my_events.TANKDEATH] = self.on_tank_death
+
     '''
     Initializes the session's sprite groups
     Parameters:
@@ -182,81 +193,70 @@ class BattleSession(session.Session):
         fps_text = self.font.render("FPS: %.2f" % clock.get_fps(), True, session.BLACK )
         self.screen.blit(fps_text, (5, self.font.get_height() * 8))
 
-    '''
-    Executes code based on what events are posted
-    Parameters:
-        self: the calling object
-        events: the collection of events
-    Return: a boolean indicating if the main loop should continue
-    '''
-    def handle_events(self, events):
+    def on_keydown(self, event):
+        session.Session.on_keydown(self, event)
+        if event.key == K_SPACE:
+            #The player shouldn't be able to launch bombs if they're dead
+            if self.can_bomb & self.player.alive():
+                new_bomb = my_sprites.PlayerBomb(self.player.rect.centerx, self.player.rect.bottom, self.battle_rect.height, BOMB_DROP_SPEED)
+                self.all_sprites.add(new_bomb)
+                self.player_projectiles.add(new_bomb)
+                self.can_bomb = False
+                #The bomb has a reload time to force the player to fight accurately
+                pygame.time.set_timer(my_events.RELOADBOMB, BOMB_RELOAD_TIME, True)
+        elif event.key == K_ESCAPE:
+            session.force_quit()
 
-        running = True
-        for event in events:
-            if event.type == KEYDOWN:
-                if event.key == K_SPACE:
-                    #The player shouldn't be able to launch bombs if they're dead
-                    if self.can_bomb & self.player.alive():
-                        new_bomb = my_sprites.PlayerBomb(self.player.rect.centerx, self.player.rect.bottom, self.battle_rect.height, BOMB_DROP_SPEED)
-                        self.all_sprites.add(new_bomb)
-                        self.player_projectiles.add(new_bomb)
-                        self.can_bomb = False
-                        #The bomb has a reload time to force the player to fight accurately
-                        pygame.time.set_timer(my_events.RELOADBOMB, BOMB_RELOAD_TIME, True)
-                elif event.key == K_ESCAPE:
-                    session.force_quit()
-            #This will force the entire game to quit irregularly.
-            elif event.type == QUIT:
-                session.force_quit()
-            elif event.type == my_events.ADDMISSILE:
-                #create a new enemy and add it to sprite groups
-                new_missile = my_sprites.Missile(self.battle_rect.x, self.screen_rect.width, self.battle_rect.y, self.battle_rect.height, self.missile_top_speed)
-                self.enemies.add(new_missile)
-                self.all_sprites.add(new_missile)
-            elif event.type == my_events.ADDCLOUD:
-                #create new cloud
-                new_cloud = my_sprites.Cloud(self.battle_rect.x, self.screen_rect.width, self.battle_rect.y, self.battle_rect.height, CLOUD_SPEED)
-                self.misc_sprites.add(new_cloud)
-                self.all_sprites.add(new_cloud)
-            elif event.type == my_events.ADDTANK:
-                if self.current_tank_count < self.max_tank_count:
-                    #Creates a new tank and increments the counter of tanks
-                    new_tank = my_sprites.LaserTank(self.battle_rect.x, self.screen_rect.width, self.battle_rect.height, TANK_SPEED,  self.player)
-                    self.enemies.add(new_tank)
-                    self.all_sprites.add(new_tank)
-                    self.current_tank_count += 1
-                else:
-                    print("Too many tanks, can't spawn more")
-            elif event.type == my_events.ADDLASER:
-                new_laser = my_sprites.Laser(event.centerx, event.bottom)
-                self.enemies.add(new_laser)
-                self.all_sprites.add(new_laser)
-            elif event.type == my_events.MAKESOUND:
-                #legacy event to make a sound clip play
-                sound_helper.play_clip(event.sound_index)
-            elif event.type == my_events.ADDEXPLOSION:
-                new_explosion = my_sprites.Explosion(event.rect)
-                self.all_sprites.add(new_explosion)
-                self.misc_sprites.add(new_explosion)
-                sound_helper.play_clip("explosion")
-            elif event.type == my_events.RELOADBOMB:
-                #Reloading is impossible if the player is dead
-                if self.player.alive():
-                    self.can_bomb = True
-                    sound_helper.play_clip("reloaded")
-            elif event.type == my_events.SCOREBONUS:
-                bonus_score = score_helper.ENEMY_SCORES[event.enemy_name]
-                self.score += bonus_score
-                text_sprite = my_sprites.TextSprite("+ %d" % bonus_score, self.font, DARK_GREEN, event.center, SCORE_FRAME_DURATION, False)
-                self.temp_text_sprites.add(text_sprite)
-            elif event.type == my_events.TANKDEATH:
-                #the max statement might not be needed, but it's there in case the count was not incremented properly in ADDTANK
-                self.current_tank_count -= 1
-                self.current_tank_count = max(self.current_tank_count, 0)
-            #The main loop should terminate and the game should move onto the next session
-            elif event.type == my_events.NEXTSESSION:
-                running = False
-        return running
+    def on_add_missile(self, event):
+        #create a new enemy and add it to sprite groups
+        new_missile = my_sprites.Missile(self.battle_rect.x, self.screen_rect.width, self.battle_rect.y, self.battle_rect.height, self.missile_top_speed)
+        self.enemies.add(new_missile)
+        self.all_sprites.add(new_missile)
+
+    def on_add_cloud(self, event):
+        #create new cloud
+        new_cloud = my_sprites.Cloud(self.battle_rect.x, self.screen_rect.width, self.battle_rect.y, self.battle_rect.height, CLOUD_SPEED)
+        self.misc_sprites.add(new_cloud)
+        self.all_sprites.add(new_cloud)
+
+    def on_add_tank(self, event):
+        if self.current_tank_count < self.max_tank_count:
+            #Creates a new tank and increments the counter of tanks
+            new_tank = my_sprites.LaserTank(self.battle_rect.x, self.screen_rect.width, self.battle_rect.height, TANK_SPEED,  self.player)
+            self.enemies.add(new_tank)
+            self.all_sprites.add(new_tank)
+            self.current_tank_count += 1
+        else:
+            print("Too many tanks, can't spawn more")
+
+    def on_add_laser(self, event):
+        new_laser = my_sprites.Laser(event.centerx, event.bottom)
+        self.enemies.add(new_laser)
+        self.all_sprites.add(new_laser)
+
+    def on_add_explosion(self, event):
+        new_explosion = my_sprites.Explosion(event.rect)
+        self.all_sprites.add(new_explosion)
+        self.misc_sprites.add(new_explosion)
+        sound_helper.play_clip("explosion")
+
+    def on_reload_bomb(self, event):
+        #Reloading is impossible if the player is dead
+        if self.player.alive():
+            self.can_bomb = True
+            sound_helper.play_clip("reloaded")
+
+    def on_score_bonus(self, event):
+        bonus_score = score_helper.ENEMY_SCORES[event.enemy_name]
+        self.score += bonus_score
+        text_sprite = my_sprites.TextSprite("+ %d" % bonus_score, self.font, DARK_GREEN, event.center, SCORE_FRAME_DURATION, False)
+        self.temp_text_sprites.add(text_sprite)
+
+    def on_tank_death(self, event):
+        #the max statement might not be needed, but it's there in case the count was not incremented properly in ADDTANK
+        self.current_tank_count -= 1
+        self.current_tank_count = max(self.current_tank_count, 0)
+
 
     '''
     Runs the main loop until events force it to quit
@@ -272,11 +272,11 @@ class BattleSession(session.Session):
         info_surface = pygame.Surface( (self.battle_rect.x, self.screen_rect.height) )
         info_surface.fill( session.WHITE )
 
-        running = True
+        self.running = True
         #self.start_bgm()
         sound_helper.load_music_file(BGM_PATH)
-        while running:
-            running = self.handle_events(pygame.event.get())
+        while self.running:
+            self.handle_events(pygame.event.get())
 
             #Get the key press list and update the player's position
             pressed_keys = pygame.key.get_pressed()

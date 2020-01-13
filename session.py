@@ -4,6 +4,16 @@ from sys import (
 exit
 )
 
+import my_events
+import sound_helper
+
+from pygame.locals import (
+KEYDOWN,
+QUIT,
+K_SPACE,
+K_ESCAPE
+)
+
 RED = (255, 0, 0)
 BLACK = (0, 0, 0)
 BLUE = (0, 100, 255)
@@ -35,8 +45,42 @@ class Session:
         self.screen_rect = screen.get_rect()
         self.misc_dict = misc_dict
         self.key_prompt_font = pygame.font.Font(None, KEYPROMPT_FONT_SIZE )
+        # Registering event handler methods
+        self.event_handler_dict = {
+            QUIT: self.on_quit,
+            KEYDOWN: self.on_keydown,
+            my_events.NEXTSESSION: self.on_next_session,
+            my_events.MAKESOUND: self.on_make_sound
+        }
 
+        self.running = True
+        self.click_on_keypress = True
 
+    def on_quit(self, event):
+        force_quit()
+
+    def on_keydown(self, event):
+        if self.click_on_keypress:
+            sound_helper.play_clip("tactile_click")
+
+    def on_next_session(self, event):
+        self.running = False
+
+    def on_make_sound(self, event):
+        #legacy event to make a sound clip play
+        sound_helper.play_clip(event.sound_index)
+
+    '''
+    Executes code based on what events are posted
+    Parameters:
+        self: the calling object
+        events: the collection of events
+    Return: a boolean indicating if the main loop should continue
+    '''
+    def handle_events(self, events):
+        for event in events:
+            if event.type in self.event_handler_dict:
+                self.event_handler_dict[event.type](event)
 
     '''
     Writes a line of input instructions at the bottom of the screen

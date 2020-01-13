@@ -17,7 +17,8 @@ K_SPACE,
 K_ESCAPE,
 K_BACKSPACE,
 K_RETURN,
-K_KP_ENTER
+K_KP_ENTER,
+TEXTINPUT
 )
 
 from session import *
@@ -43,37 +44,32 @@ class InputScoreSession(Session):
         self.text_rect = pygame.Rect(0, 0, NAME_INPUT_FONT_SIZE * 6, NAME_INPUT_FONT_SIZE)
         self.text_rect.center = self.screen_rect.center
 
-    '''
-    Executes code based on what events are posted
-    Parameters:
-        self: the calling object
-        events: the collection of events
-    Return: a boolean indicating if the main loop should continue
-    '''
-    def handle_events(self, events):
-        running = True
-        pressed_keys = pygame.key.get_pressed()
-        for event in events:
-            if event.type == QUIT:
-                force_quit()
-            elif event.type == KEYDOWN:
-                # I accounted for both enter keys
-                if (event.key == K_RETURN) or (event.key == K_KP_ENTER):
-                    if self.namestring != "":
-                        score_helper.add_score( self.namestring.strip(), self.misc_dict["score"] )
-                        score_helper.save_scores()
-                        running = False
-                elif event.key == K_BACKSPACE:
-                    # I have to manually erase a character at the end of the name string
-                    if len(self.namestring) > 0:
-                        self.namestring = self.namestring[:len(self.namestring) - 1]
-                elif event.key == K_ESCAPE:
-                    force_quit()
-            elif event.type == pygame.TEXTINPUT:
-                # This event seems to only get one character at a time, so I have to build the string manually
-                if len(self.namestring) < score_helper.NAME_CHAR_LIMIT:
-                    self.namestring += event.text
-        return running
+        self.click_on_keypress = False
+
+        self.event_handler_dict[TEXTINPUT] = self.on_text_input
+
+
+    def on_keydown(self, event):
+        Session.on_keydown(self, event)
+        # I accounted for both enter keys
+        if (event.key == K_RETURN) or (event.key == K_KP_ENTER):
+            if self.namestring != "":
+                score_helper.add_score( self.namestring.strip(), self.misc_dict["score"] )
+                score_helper.save_scores()
+                self.running = False
+        elif event.key == K_BACKSPACE:
+            # I have to manually erase a character at the end of the name string
+            if len(self.namestring) > 0:
+                self.namestring = self.namestring[:len(self.namestring) - 1]
+        elif event.key == K_ESCAPE:
+            force_quit()
+
+    def on_text_input(self, event):
+        if len(self.namestring) < score_helper.NAME_CHAR_LIMIT:
+            self.namestring += event.text
+
+
+
 
     '''
     Writes the currently constructed text
@@ -108,13 +104,13 @@ class InputScoreSession(Session):
     Return: the string key for the next session, a dict containing values needed for the next session
     '''
     def run_loop(self):
-        running = True
+        self.running = True
 
         clock = pygame.time.Clock()
 
 
-        while running:
-            running = self.handle_events( pygame.event.get() )
+        while self.running:
+            self.handle_events( pygame.event.get() )
 
             self.screen.blit(self.background_surface, (0, 0) )
 
