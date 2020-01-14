@@ -25,7 +25,7 @@ On an unrelated note, several months ago, you and your bomber crew were witnesse
 
 * Your score will increase over time and will increase more the faster the missiles move. Each active tank will increase your score even faster.
 * Missiles and tanks can be destroyed by bombing them or if your plane collides with them. They're worth 1000 and 10000 pts respectively.
-* The tank will shoot lasers, which can only be destroyed by bombs but will disappear in 1/6 of a second. They're worth 20000 pts.
+* The tank will shoot lasers, which can only be destroyed by bombs but will disappear in 1/6 of a second. They're worth 100000 pts.
 * To get on the high score list, you must surpass the current 5th best score on the highest difficulty settings.
 
 # Python Files
