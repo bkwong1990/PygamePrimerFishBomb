@@ -74,14 +74,17 @@ class ViewScoresSession(Session):
                 pygame.event.post( pygame.event.Event( my_events.NEXTSESSION ) )
         self.score_menu.add("Return", on_return)
 
+    '''
+    Event handling method that processes KEYDOWN events.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_keydown(self, event):
         Session.on_keydown(self, event)
-        if event.key == K_ESCAPE:
-            force_quit()
-        else:
-            self.score_menu.process_input(event.key)
+        self.score_menu.process_input(event.key)
 
-    
+
 
     '''
     Runs the main loop until events force it to quit

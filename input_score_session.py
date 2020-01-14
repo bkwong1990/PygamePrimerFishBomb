@@ -48,7 +48,12 @@ class InputScoreSession(Session):
 
         self.event_handler_dict[TEXTINPUT] = self.on_text_input
 
-
+    '''
+    Event handling method that processes KEYDOWN events.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_keydown(self, event):
         Session.on_keydown(self, event)
         # I accounted for both enter keys
@@ -61,9 +66,13 @@ class InputScoreSession(Session):
             # I have to manually erase a character at the end of the name string
             if len(self.namestring) > 0:
                 self.namestring = self.namestring[:len(self.namestring) - 1]
-        elif event.key == K_ESCAPE:
-            force_quit()
 
+    '''
+    Event handling method that processes TEXTINPUT events.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_text_input(self, event):
         if len(self.namestring) < score_helper.NAME_CHAR_LIMIT:
             self.namestring += event.text

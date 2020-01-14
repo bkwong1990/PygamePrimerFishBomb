@@ -56,16 +56,45 @@ class Session:
         self.running = True
         self.click_on_keypress = True
 
+    '''
+    Event handling method that processes QUIT events by force-quitting
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_quit(self, event):
         force_quit()
 
+    '''
+    Event handling method that processes KEYDOWN events. By default, it plays
+    the tactile click sound and has ESC force quit.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_keydown(self, event):
         if self.click_on_keypress:
             sound_helper.play_clip("tactile_click")
+        if event.key == K_ESCAPE:
+            force_quit()
 
+    '''
+    Event handling method that processes NEXTSESSION events. Prevents the current
+    session from running further.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_next_session(self, event):
         self.running = False
 
+    '''
+    Event handling method that processes MAKESOUND events. Plays a specific clip.
+    The method and event aren't needed as much anymore due to the sound_helper.py file
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_make_sound(self, event):
         #legacy event to make a sound clip play
         sound_helper.play_clip(event.sound_index)

@@ -120,14 +120,11 @@ class ConfigSession(Session):
 
     def on_keydown(self, event):
         Session.on_keydown(self, event)
-        if event.key == K_ESCAPE:
-            force_quit()
-        else:
-            self.menu.process_input(event.key)
+        self.menu.process_input(event.key)
 
 
 
-    
+
 
     '''
     Runs the main loop until events force it to quit

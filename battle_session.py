@@ -193,6 +193,12 @@ class BattleSession(session.Session):
         fps_text = self.font.render("FPS: %.2f" % clock.get_fps(), True, session.BLACK )
         self.screen.blit(fps_text, (5, self.font.get_height() * 8))
 
+    '''
+    Event handling method that processes KEYDOWN events. Pressing the spacebar drops a bomb.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_keydown(self, event):
         session.Session.on_keydown(self, event)
         if event.key == K_SPACE:
@@ -204,21 +210,37 @@ class BattleSession(session.Session):
                 self.can_bomb = False
                 #The bomb has a reload time to force the player to fight accurately
                 pygame.time.set_timer(my_events.RELOADBOMB, BOMB_RELOAD_TIME, True)
-        elif event.key == K_ESCAPE:
-            session.force_quit()
 
+    '''
+    Event handling method that processes ADDMISSILE events.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_add_missile(self, event):
         #create a new enemy and add it to sprite groups
         new_missile = my_sprites.Missile(self.battle_rect.x, self.screen_rect.width, self.battle_rect.y, self.battle_rect.height, self.missile_top_speed)
         self.enemies.add(new_missile)
         self.all_sprites.add(new_missile)
 
+    '''
+    Event handling method that processes ADDCLOUD events.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_add_cloud(self, event):
         #create new cloud
         new_cloud = my_sprites.Cloud(self.battle_rect.x, self.screen_rect.width, self.battle_rect.y, self.battle_rect.height, CLOUD_SPEED)
         self.misc_sprites.add(new_cloud)
         self.all_sprites.add(new_cloud)
 
+    '''
+    Event handling method that processes ADDTANK events.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_add_tank(self, event):
         if self.current_tank_count < self.max_tank_count:
             #Creates a new tank and increments the counter of tanks
@@ -226,32 +248,60 @@ class BattleSession(session.Session):
             self.enemies.add(new_tank)
             self.all_sprites.add(new_tank)
             self.current_tank_count += 1
-        else:
-            print("Too many tanks, can't spawn more")
 
+    '''
+    Event handling method that processes ADDLASER events.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_add_laser(self, event):
         new_laser = my_sprites.Laser(event.centerx, event.bottom)
         self.enemies.add(new_laser)
         self.all_sprites.add(new_laser)
 
+    '''
+    Event handling method that processes ADDEXPLOSION events.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_add_explosion(self, event):
         new_explosion = my_sprites.Explosion(event.rect)
         self.all_sprites.add(new_explosion)
         self.misc_sprites.add(new_explosion)
         sound_helper.play_clip("explosion")
 
+    '''
+    Event handling method that processes RELOADBOMB events.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_reload_bomb(self, event):
         #Reloading is impossible if the player is dead
         if self.player.alive():
             self.can_bomb = True
             sound_helper.play_clip("reloaded")
 
+    '''
+    Event handling method that processes SCOREBONUS events.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_score_bonus(self, event):
         bonus_score = score_helper.ENEMY_SCORES[event.enemy_name]
         self.score += bonus_score
         text_sprite = my_sprites.TextSprite("+ %d" % bonus_score, self.font, DARK_GREEN, event.center, SCORE_FRAME_DURATION, False)
         self.temp_text_sprites.add(text_sprite)
 
+    '''
+    Event handling method that processes TANKDEATH events.
+    Parameters:
+        self: the calling object
+        event: the event to be handled
+    '''
     def on_tank_death(self, event):
         #the max statement might not be needed, but it's there in case the count was not incremented properly in ADDTANK
         self.current_tank_count -= 1
