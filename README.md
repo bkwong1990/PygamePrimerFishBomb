@@ -5,6 +5,7 @@ A Pygame example where you control a plane that drops bombs on laser tanks. This
 # Installation
 
 * Install Python 3.8.0 and Pygame 2.0.0.dev6 (Google is your friend)
+* This was developed and tested on macOS Catalina.
 * Download the archive and extract it
 * `python3 fish_bomber.py` to start the game
 
@@ -79,13 +80,3 @@ from pnglot](https://www.pnglot.com/i/hJJxmbR_example-sprite-sheet-animation-spr
  * [Tank Sprite from Hunt PNG](https://huntpng.com/keyword/tank-sprite-png)
 * title_background.png
  * [by Elia Clerici](https://www.pexels.com/photo/photo-of-blue-sky-912110/)
-
-# To-do list
-
-* Add a short synopsis
-* Add a tutorial
-* Credits for assets
-* Export the game to a convenient executable
-* Release by Jan 10 2020
-* Release candidate by Jan 9 2020
-* Classify todo as P1 vs defer
