@@ -1,10 +1,6 @@
 import pygame
 import math
-import battle_session
-import title_session
-import config_session
-import input_score_session
-import view_scores_session
+
 import config_helper
 import sound_helper
 import score_helper
@@ -19,6 +15,13 @@ SCREEN_HEIGHT = 720
 #Create screen object
 
 SCREEN = pygame.display.set_mode( (SCREEN_WIDTH, SCREEN_HEIGHT) , flags=pygame.SCALED)
+
+#The sessions are imported after the display mode so that I can init surfaces ahead of time
+import battle_session
+import title_session
+import config_session
+import input_score_session
+import view_scores_session
 
 
 # dictionary to conveniently access session class names

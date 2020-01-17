@@ -24,8 +24,11 @@ post_explosion,
 post_score_bonus
 )
 
+pygame.init()
+
 #A class representing the player character
 class Player(pygame.sprite.Sprite):
+    IMAGE = pygame.image.load("img/jet.png").convert_alpha()
     '''
     Creates a new player
     Parameters:
@@ -39,7 +42,7 @@ class Player(pygame.sprite.Sprite):
 
         # https://thenounproject.com/term/fighter-jet/59845/
 
-        self.image = pygame.image.load("img/jet.png").convert_alpha()
+        self.image = Player.IMAGE
 
         self.rect = self.image.get_rect( centery = (bottom_bound - top_bound) // 2)
         self.left_bound = left_bound
@@ -112,6 +115,7 @@ class Enemy(pygame.sprite.Sprite):
 
 #A missile to shoot down the player
 class Missile(Enemy):
+    IMAGE = pygame.image.load("img/missile.png").convert_alpha()
     '''
     Creates a new missile
     Parameters:
@@ -123,7 +127,7 @@ class Missile(Enemy):
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, missile_maxspeed):
         super(Missile, self).__init__()
         # https://premiumbpthemes.com/explore/missile-transparent-background.html
-        self.image = pygame.image.load("img/missile.png").convert_alpha()
+        self.image = Missile.IMAGE
 
         self.rect = self.image.get_rect(
             center=(
@@ -148,6 +152,7 @@ class Missile(Enemy):
 
 #A cloud that does nothing
 class Cloud(pygame.sprite.Sprite):
+    IMAGE = pygame.image.load("img/cloud.png").convert_alpha()
     '''
     Creates a new cloud
     Parameters:
@@ -159,7 +164,7 @@ class Cloud(pygame.sprite.Sprite):
     def __init__(self, left_bound, right_bound, top_bound, bottom_bound, cloud_speed):
         super(Cloud, self).__init__()
         # https://www.cleanpng.com/png-cloud-computing-dust-676210/preview.html
-        self.image = pygame.image.load("img/cloud.png").convert_alpha()
+        self.image = Cloud.IMAGE
 
         self.rect = self.image.get_rect(
             center = (
@@ -183,6 +188,7 @@ class Cloud(pygame.sprite.Sprite):
 #A tank enemy that follows the player's position and shoots lasers
 class LaserTank(Enemy):
     LASER_COOLDOWN = 300
+    IMAGE = pygame.image.load("img/tank.png").convert_alpha()
     '''
     Creates a new tank
     Parameters:
@@ -197,7 +203,7 @@ class LaserTank(Enemy):
     def __init__(self, left_bound, right_bound, bottom_bound, tank_speed, target):
         super(LaserTank, self).__init__()
         # https://huntpng.com/keyword/tank-sprite-png
-        self.image = pygame.image.load("img/tank.png").convert_alpha()
+        self.image = LaserTank.IMAGE
 
         width = self.image.get_rect().width
         height = self.image.get_rect().height
@@ -265,6 +271,7 @@ class LaserTank(Enemy):
 #A laser that pierces the heavens
 class Laser(Enemy):
     LASER_DURATION = 10
+    IMAGE = pygame.image.load("img/laser.png").convert_alpha()
     '''
     Creates a new laser
     Parameters:
@@ -275,7 +282,7 @@ class Laser(Enemy):
     '''
     def __init__(self, centerx, bottom):
         super(Laser, self).__init__()
-        self.image = pygame.image.load("img/laser.png").convert_alpha()
+        self.image = Laser.IMAGE
 
         self.rect = self.image.get_rect()
         self.rect.centerx = centerx
@@ -307,6 +314,9 @@ class Explosion(pygame.sprite.Sprite):
     #This will cause frames to be repeated and make the animation slower.
     SLOW_MULTIPLIER = 3
 
+    ORIGINAL_IMAGE = pygame.image.load("img/explosion.png").convert_alpha()
+    ORIGINAL_RECT = ORIGINAL_IMAGE.get_rect()
+
     '''
     Creates a new explosion
     Parameters:
@@ -317,17 +327,17 @@ class Explosion(pygame.sprite.Sprite):
         super(Explosion, self).__init__()
         #Get the surface of the spritesheet
         # https://www.pnglot.com/i/hJJxmbR_example-sprite-sheet-animation-sprite-sheet-particle-unity/
-        original_surf = pygame.image.load("img/explosion.png").convert_alpha()
+        #Explosion.ORIGINAL_IMAGE = pygame.image.load("img/explosion.png").convert_alpha()
 
         #Get the rectable of the spritesheet
-        original_rect = original_surf.get_rect()
+        #Explosion.ORIGINAL_RECT = Explosion.ORIGINAL_IMAGE.get_rect()
 
-        #get the length of the longest side of the target rectangle
+        #get the length of the longest side of the target rectangle and scale it up by 2
         longest_length = max(target_rect.width, target_rect.height) * 2
 
         #get the width and height of each cell in the spritesheet
-        original_col_width = original_rect.width // Explosion.COLUMNS
-        original_row_height = original_rect.height // Explosion.ROWS
+        original_col_width = Explosion.ORIGINAL_RECT.width // Explosion.COLUMNS
+        original_row_height = Explosion.ORIGINAL_RECT.height // Explosion.ROWS
 
         #get the width : height ratio of each cell
         aspect_ratio = original_col_width / original_row_height
@@ -337,7 +347,7 @@ class Explosion(pygame.sprite.Sprite):
         #Rescale the width of the spritesheet
         scaled_width = math.floor(longest_length * aspect_ratio) * Explosion.COLUMNS
         #Rescale the spritesheet so that each cell covers the target rectangle
-        self.animation_surf = pygame.transform.scale(original_surf, (scaled_width, scaled_height))
+        self.animation_surf = pygame.transform.scale(Explosion.ORIGINAL_IMAGE, (scaled_width, scaled_height))
         animation_rect = self.animation_surf.get_rect()
         #Calculate the width and height of each cell in the new spritesheet surface
         self.image_width = animation_rect.width // Explosion.COLUMNS
@@ -375,6 +385,7 @@ class Explosion(pygame.sprite.Sprite):
 
 #A bomb dropped by the player.
 class PlayerBomb(pygame.sprite.Sprite):
+    IMAGE = pygame.image.load("img/fish_bomb.png").convert_alpha()
     #the number of pixels the bomb should horizontally drift per frame
     DRIFT = 4
     '''
@@ -389,7 +400,7 @@ class PlayerBomb(pygame.sprite.Sprite):
     def __init__(self, centerx, top, bottom_bound, fall_speed):
         super(PlayerBomb, self).__init__()
         # https://opengameart.org/content/2d-retro-fish
-        self.image = pygame.image.load("img/fish_bomb.png").convert_alpha()
+        self.image = PlayerBomb.IMAGE
         self.rect = self.image.get_rect()
         self.rect.centerx = centerx
         self.rect.top = top
@@ -444,7 +455,11 @@ class TextSprite(pygame.sprite.Sprite):
         self.frame_duration -= 1
 # A spacebar prompt that follows a target sprite
 class MovingSpaceBarPrompt(pygame.sprite.Sprite):
-
+    # I made this with pixelartmaker.com
+    READY_IMAGE = pygame.image.load("img/spacebar.png").convert_alpha()
+    # I pasted the following image on top of the spacebar to show that it's not to be used
+    # https://publicdomainvectors.org/en/free-clipart/Stop-process-icon/67213.html
+    NOT_READY_IMAGE = pygame.image.load("img/spacebar_no.png").convert_alpha()
     '''
     Creates a new spacebar prompt
     Parameters:
@@ -454,14 +469,8 @@ class MovingSpaceBarPrompt(pygame.sprite.Sprite):
     '''
     def __init__(self, target, offset):
         super(MovingSpaceBarPrompt, self).__init__()
+        self.image = MovingSpaceBarPrompt.READY_IMAGE
 
-        # I made this with pixelartmaker.com
-        self.image = pygame.image.load("img/spacebar.png").convert_alpha()
-        # Use the default image to denote that the spacebar is ready to be used
-        self.ready_surf = self.image
-        # I pasted the following image on top of the spacebar to show that it's not to be used
-        # https://publicdomainvectors.org/en/free-clipart/Stop-process-icon/67213.html
-        self.not_ready_surf = pygame.image.load("img/spacebar_no.png").convert_alpha()
         self.rect = self.image.get_rect( center = target.rect.center )
 
         self.rect.move_ip(offset)
@@ -477,7 +486,7 @@ class MovingSpaceBarPrompt(pygame.sprite.Sprite):
     def update(self, is_ready):
         if self.target.alive():
 
-            self.image = self.ready_surf if is_ready else self.not_ready_surf
+            self.image = MovingSpaceBarPrompt.READY_IMAGE if is_ready else MovingSpaceBarPrompt.NOT_READY_IMAGE
 
             self.rect.center = self.target.rect.center
             self.rect.move_ip(self.offset)
